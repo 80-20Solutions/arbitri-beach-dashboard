@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Arbitri Beach Volley V8</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--card:#1e293b;--card2:#334155;--gold:#f59e0b;--text:#e2e8f0;--muted:#94a3b8;--red:#ef4444;--green:#22c55e;--yellow:#eab308;--blue:#3b82f6}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.sync-banner{background:linear-gradient(90deg,#065f46,#047857);padding:8px 20px;text-align:center;font-size:.8rem;color:#d1fae5;display:flex;align-items:center;justify-content:center;gap:8px}
+.sync-banner .dot{width:8px;height:8px;border-radius:50%;background:#34d399;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.header{background:linear-gradient(135deg,#1e293b,#334155);padding:24px 32px;border-bottom:2px solid var(--gold);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header h1{font-size:1.6rem;color:var(--gold)}
+.header .sub{color:var(--muted);font-size:.85rem}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.kpi{background:var(--card);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;border:1px solid transparent}
+.kpi:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.kpi .val{font-size:2rem;font-weight:700;color:var(--gold)}
+.kpi .label{color:var(--muted);font-size:.8rem;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.chart-box{background:var(--card);border-radius:12px;padding:20px}
+.chart-box h3{color:var(--gold);margin-bottom:12px;font-size:.95rem}
+.analysis-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+.analysis-card{background:var(--card);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;border-left:4px solid var(--muted)}
+.analysis-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.analysis-card .a-val{font-size:1.8rem;font-weight:700}
+.analysis-card .a-label{font-size:.8rem;color:var(--muted);margin-top:4px}
+.analysis-card.red{border-color:var(--red)}.analysis-card.red .a-val{color:var(--red)}
+.analysis-card.yellow{border-color:var(--yellow)}.analysis-card.yellow .a-val{color:var(--yellow)}
+.analysis-card.green{border-color:var(--green)}.analysis-card.green .a-val{color:var(--green)}
+.analysis-card.orange{border-color:#f97316}.analysis-card.orange .a-val{color:#f97316}
+.analysis-card.blue{border-color:var(--blue)}.analysis-card.blue .a-val{color:var(--blue)}
+.analysis-card.purple{border-color:#a855f7}.analysis-card.purple .a-val{color:#a855f7}
+.analysis-card.teal{border-color:#14b8a6}.analysis-card.teal .a-val{color:#14b8a6}
+.section-title{color:var(--gold);font-size:1.1rem;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--card2)}
+.filters{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filters input,.filters select{background:var(--card2);border:1px solid #475569;color:var(--text);padding:8px 12px;border-radius:8px;font-size:.85rem}
+.filters input:focus,.filters select:focus{outline:none;border-color:var(--gold)}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}
+thead th{background:var(--card2);padding:10px 12px;text-align:left;font-size:.8rem;color:var(--gold);cursor:pointer;user-select:none;white-space:nowrap}
+thead th:hover{background:#475569}
+thead th.sorted-asc::after{content:' ▲'}
+thead th.sorted-desc::after{content:' ▼'}
+tbody tr{border-bottom:1px solid #1e293b;cursor:pointer;transition:background .15s}
+tbody tr:hover{background:var(--card2)}
+td{padding:8px 12px;font-size:.85rem;position:relative}
+td.editable{cursor:cell}
+td.editable:hover{outline:1px dashed var(--gold);outline-offset:-2px}
+td.editing{padding:2px}
+td.editing input{width:100%;padding:6px 8px;background:var(--card2);border:2px solid var(--gold);color:var(--text);border-radius:4px;font-size:.85rem}
+td.saving{background:rgba(234,179,8,.15)!important}
+td.saved{background:rgba(34,197,94,.15)!important;transition:background 1s}
+td.save-error{background:rgba(239,68,68,.15)!important}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;justify-content:center;align-items:center;animation:fadeIn .2s}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);border-radius:16px;padding:24px;max-width:800px;width:95%;max-height:85vh;overflow-y:auto;position:relative;border:1px solid var(--card2)}
+.modal h2{color:var(--gold);margin-bottom:16px;font-size:1.2rem}
+.modal .close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer}
+.modal .close:hover{color:var(--text)}
+.modal table{font-size:.8rem}
+.modal canvas{max-height:250px}
+.modal-list{list-style:none;max-height:400px;overflow-y:auto}
+.modal-list li{padding:8px 12px;border-bottom:1px solid var(--card2);font-size:.85rem}
+.modal-list li:hover{background:var(--card2)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:600}
+.badge-pr{background:#7c3aed33;color:#a78bfa}.badge-re{background:#2563eb33;color:#60a5fa}.badge-na{background:#65a30d33;color:#a3e635}
+.badge-b1{background:#ef444433;color:#f87171}.badge-b2{background:#3b82f633;color:#60a5fa}
+.badge-u1{background:#a855f733;color:#c084fc}.badge-td{background:#14b8a633;color:#5eead4}
+.badge-st{background:#f59e0b33;color:#fbbf24}.badge-fi{background:#ec489933;color:#f472b6}
+.spinner-overlay{display:flex;position:fixed;inset:0;background:var(--bg);z-index:2000;justify-content:center;align-items:center;flex-direction:column;gap:16px}
+.spinner{width:48px;height:48px;border:4px solid var(--card2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+.table-wrapper{overflow-x:auto;border-radius:12px;margin-bottom:24px}
+.profile-section{margin-bottom:16px}
+.profile-section h4{color:var(--gold);margin-bottom:8px;font-size:.9rem}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.profile-grid div{font-size:.85rem}
+.cat-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.cat-badge{padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600}
+.tornei-table{width:100%;font-size:.8rem;margin-bottom:16px}
+.tornei-table th{background:var(--card2);padding:6px 10px;text-align:left;color:var(--gold)}
+.tornei-table td{padding:6px 10px;border-bottom:1px solid var(--card2)}
+</style>
+</head>
+<body>
+<div class="spinner-overlay" id="spinner"><div class="spinner"></div><div style="color:var(--muted)">Caricamento dati live...</div></div>
+
+<div class="sync-banner" id="syncBanner">
+<div class="dot"></div>
+<span>Collegato a Google Sheets — le modifiche si salvano automaticamente</span>
+</div>
+
+<div class="header">
+<div><h1>🏐 Dashboard Arbitri Beach Volley</h1><div class="sub">Dati live da Google Sheets — V8 con profili arbitro e designazioni</div></div>
+<div class="sub" id="lastUpdate"></div>
+</div>
+
+<div class="container">
+<div class="kpi-grid" id="kpiGrid"></div>
+
+<div class="charts-grid">
+<div class="chart-box"><h3>📊 Distribuzione per Età</h3><canvas id="chartEta"></canvas></div>
+<div class="chart-box"><h3>📊 Distribuzione per Anzianità</h3><canvas id="chartAnz"></canvas></div>
+<div class="chart-box"><h3>📊 Distribuzione per Comitato</h3><canvas id="chartComitato"></canvas></div>
+<div class="chart-box"><h3>📈 Attività per Stagione</h3><canvas id="chartStagione"></canvas></div>
+</div>
+
+<div class="section-title">⚡ Analisi Critica</div>
+<div class="analysis-grid" id="analysisGrid"></div>
+
+<div class="section-title">👨‍⚖️ Tabella Arbitri <span style="font-size:.75rem;color:var(--muted)">(clicca sul nome per il profilo, su una cella ✏️ per modificarla)</span></div>
+<div class="filters" id="arbitriFilters">
+<input type="text" id="searchName" placeholder="🔍 Cerca nominativo...">
+<select id="filterComitato"><option value="">Tutti i comitati</option></select>
+<select id="filterStato"><option value="">Tutti gli stati</option></select>
+<select id="filterEta"><option value="">Tutte le età</option><option value="<20">&lt;20</option><option value="20-30">20-30</option><option value="30-40">30-40</option><option value="40-50">40-50</option><option value=">50">&gt;50</option></select>
+</div>
+<div class="table-wrapper"><table id="arbitriTable"><thead><tr></tr></thead><tbody></tbody></table></div>
+
+<div class="section-title">⚠️ Arbitri Non in Organico</div>
+<div class="table-wrapper"><table id="nonOrgTable"><thead><tr><th>Nominativo</th><th>Età</th><th>Comitato</th><th>2018</th><th>2019</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>Totale</th></tr></thead><tbody></tbody></table></div>
+
+<div class="section-title">🏖️ Tabella Supervisori</div>
+<div class="table-wrapper"><table id="supTable"><thead><tr><th>Nominativo</th><th>Età</th><th>Qualifica</th><th>Comitato</th><th>Stato</th><th>Anzianità</th></tr></thead><tbody></tbody></table></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modal"><button class="close" id="modalClose">&times;</button><h2 id="modalTitle"></h2><div id="modalBody"></div></div></div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbwMJgjVtb4A9bzQf9-Y3ko-UZnl-DanzfyXFCoTZtjQIJOBU3e2CQ1AED6A5kK028E8/exec';
+
+const PROXY='https://corsproxy.io/?url=';
+const SHEET_ID='11yFEnHfKU2mu8ym5JqBn11Wu1PQYV1Xj8nYfy576Zoo';
+const ORG_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1005819633`;
+const ANA_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=265498497`;
+const DES_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=21948265`;
+
+const useAPI = API_URL && !API_URL.includes('INSERISCI');
+
+let arbitri=[],supervisori=[],analisi=[],merged=[],mergedOrganico=[],mergedNonOrganico=[];
+let orgHeaders=[], anaHeaders=[];
+let sortCol=-1,sortDir=1;
+// Designazioni data: { tornei: [{tipo,data,luogo}], arbitriMap: Map<cognomeLower, [{tipo,data,luogo}]> }
+let desData = { tornei: [], arbitriMap: new Map() };
+
+function parseCSV(text){
+const rows=[];let cur=[],field='',inQ=false;
+for(let i=0;i<text.length;i++){
+const c=text[i];
+if(inQ){if(c==='"'){if(text[i+1]==='"'){field+='"';i++}else inQ=false}else field+=c}
+else{if(c==='"')inQ=true;else if(c===','){cur.push(field.trim());field=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;cur.push(field.trim());if(cur.some(x=>x))rows.push(cur);cur=[];field=''}else field+=c}
+}
+cur.push(field.trim());if(cur.some(x=>x))rows.push(cur);
+return rows;
+}
+
+function parseDate(s){
+if(!s)return null;
+let m=s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+return new Date(s);
+}
+
+function fmtDate(d){if(!d||isNaN(d))return'-';return d.toLocaleDateString('it-IT')}
+function yearsDiff(d){if(!d||isNaN(d))return 0;return Math.floor((new Date()-d)/31557600000)}
+
+async function fetchCSV(url){
+const r=await fetch(PROXY+encodeURIComponent(url));
+if(!r.ok)throw new Error(r.status);
+return await r.text();
+}
+
+async function saveCell(tab, row, col, value) {
+  if (!useAPI) { alert('API non configurata.'); return false; }
+  try {
+    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ tab, row, col, value }), mode: 'no-cors' });
+    return true;
+  } catch (err) { console.error('Save error:', err); return false; }
+}
+
+async function saveCellCORS(tab, row, col, value) {
+  if (!useAPI) { alert('API non configurata.'); return false; }
+  try {
+    const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ tab, row, col, value }), redirect: 'follow' });
+    const j = await r.json();
+    return j.success;
+  } catch (err) {
+    try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ tab, row, col, value }), mode: 'no-cors' }); return true; }
+    catch (e2) { console.error('Save error:', e2); return false; }
+  }
+}
+
+async function loadData(){
+  try {
+    if (useAPI) { await loadFromAPI(); } else { await loadFromCSV(); }
+  } catch(e) {
+    console.error('Primary load failed, trying CSV fallback:', e);
+    await loadFromCSV();
+  }
+  // Always try to load designazioni
+  await loadDesignazioni();
+  render();
+  document.getElementById('spinner').style.display='none';
+  document.getElementById('lastUpdate').textContent='Aggiornato: '+new Date().toLocaleString('it-IT');
+  if (!useAPI) {
+    document.getElementById('syncBanner').innerHTML='<span style="color:#fcd34d">⚠️ Modalità sola lettura (CSV). Configura API per editing.</span>';
+    document.getElementById('syncBanner').style.background='linear-gradient(90deg,#78350f,#92400e)';
+  }
+}
+
+async function loadDesignazioni() {
+  try {
+    // Try API first (if it has designazioni field)
+    if (useAPI && !desData.tornei.length) {
+      try {
+        const r = await fetch(API_URL);
+        const data = await r.json();
+        if (data.success && data.designazioni) {
+          processDesignazioniAPI(data.designazioni);
+          return;
+        }
+      } catch(e) { console.log('API designazioni not available, using CSV fallback'); }
+    }
+    // Fallback: CSV
+    if (!desData.tornei.length) {
+      const text = await fetchCSV(DES_URL);
+      processDesignazioniCSV(text);
+    }
+  } catch(e) {
+    console.error('Failed to load designazioni:', e);
+  }
+}
+
+function processDesignazioniAPI(des) {
+  // des = { tornei: [{colIndex, tipo, data, luogo}], arbitri: [{cognome, designati:[colIdx...]}] }
+  desData.tornei = des.tornei;
+  desData.arbitriMap = new Map();
+  des.arbitri.forEach(a => {
+    const torneiArb = a.designati.map(ci => {
+      const t = des.tornei.find(t => t.colIndex === ci);
+      return t ? { tipo: t.tipo, data: t.data, luogo: t.luogo } : null;
+    }).filter(Boolean);
+    desData.arbitriMap.set(a.cognome.toLowerCase(), torneiArb);
+  });
+}
+
+function processDesignazioniCSV(text) {
+  const rows = parseCSV(text);
+  if (rows.length < 4) return;
+  const tipi = rows[0];
+  const date = rows[1];
+  const luoghi = rows[2];
+  const numCols = tipi.length;
+  
+  const tornei = [];
+  for (let c = 1; c < numCols; c++) {
+    tornei.push({ tipo: (tipi[c]||'').trim(), data: (date[c]||'').trim(), luogo: (luoghi[c]||'').trim() });
+  }
+  desData.tornei = tornei;
+  desData.arbitriMap = new Map();
+  
+  for (let r = 3; r < rows.length; r++) {
+    const cognome = (rows[r][0]||'').trim();
+    if (!cognome) continue;
+    const torneiArb = [];
+    for (let c = 1; c < numCols; c++) {
+      if ((rows[r][c]||'').trim().toLowerCase() === 'x') {
+        torneiArb.push(tornei[c-1]);
+      }
+    }
+    desData.arbitriMap.set(cognome.toLowerCase(), torneiArb);
+  }
+}
+
+async function loadFromAPI() {
+  const r = await fetch(API_URL);
+  const data = await r.json();
+  if (!data.success) throw new Error(data.error || 'API error');
+  processOrganicoRows(data.organico);
+  processAnalisiRows(data.analisi);
+  if (data.designazioni) processDesignazioniAPI(data.designazioni);
+  mergeData();
+}
+
+async function loadFromCSV() {
+  const[orgText,anaText]=await Promise.all([fetchCSV(ORG_URL),fetchCSV(ANA_URL)]);
+  const orgRows=parseCSV(orgText);
+  let hIdx=orgRows.findIndex(r=>r[0]&&r[0].includes('Tipo Tecnico'));
+  if(hIdx<0)hIdx=3;
+  const hdr=orgRows[hIdx];
+  orgHeaders=hdr;
+  const data=orgRows.slice(hIdx+1).filter(r=>r.length>=5&&r[0]);
+  data.forEach((r,ri)=>{
+    const obj={};hdr.forEach((h,i)=>obj[h]=r[i]||'');
+    obj._rowIndex = hIdx + 2 + ri;
+    processOrgObj(obj);
+  });
+  const anaRows=parseCSV(anaText);
+  const aHdr=anaRows[0];anaHeaders=aHdr;
+  anaRows.slice(1).filter(r=>r[0]).forEach((r,ri)=>{
+    const o={};aHdr.forEach((h,i)=>o[h]=r[i]||'');
+    o._rowIndex = 2 + ri;
+    o._nome=(o['Arbitro']||'').trim();
+    o._years={};
+    ['2018','2019','2020','2021','2022','2023','2024','2025'].forEach(y=>o._years[y]=parseInt(o[y])||0);
+    o._totale=parseInt(o['Totale'])||0;
+    analisi.push(o);
+  });
+  mergeData();
+}
+
+function processOrganicoRows(rows) { rows.forEach(obj => processOrgObj(obj)); }
+
+function processOrgObj(obj) {
+  obj._dob=parseDate(obj['Data di nascita']);
+  obj._eta=parseInt(obj['Età'])||0;
+  obj._dtTess=parseDate(obj['Data tesseramento']);
+  obj._dtPrimo=parseDate(obj['Data primo tesseramento']);
+  obj._anz=yearsDiff(obj._dtPrimo);
+  obj._nome=(obj['Nominativo']||'').trim();
+  obj._tipo=(obj['Tipo Tecnico']||'').trim();
+  obj._qualifica=(obj['Qualifica']||'').trim();
+  obj._comitato=(obj['Comitato Territoriale']||'').trim();
+  obj._stato=(obj['Stato tesseramento']||'').trim();
+  if(obj._tipo.toLowerCase().includes('arbitro')&&!obj._tipo.toLowerCase().includes('supervis'))arbitri.push(obj);
+  else if(obj._tipo.toLowerCase().includes('supervis'))supervisori.push(obj);
+}
+
+function processAnalisiRows(rows) {
+  rows.forEach(o => {
+    o._nome=(o['Arbitro']||'').trim();
+    o._years={};
+    ['2018','2019','2020','2021','2022','2023','2024','2025'].forEach(y=>o._years[y]=parseInt(o[y])||0);
+    o._totale=parseInt(o['Totale'])||0;
+    analisi.push(o);
+  });
+}
+
+function mergeData() {
+  const anaMap=new Map();
+  analisi.forEach(a=>anaMap.set(a._nome.toLowerCase(),a));
+  const orgSet=new Set();
+  arbitri.forEach(a=>{
+    orgSet.add(a._nome.toLowerCase());
+    const an=anaMap.get(a._nome.toLowerCase());
+    merged.push({...a,_years:an?an._years:{},...(an?{_totale:an._totale}:{_totale:0}),_inOrganico:true,_inAnalisi:!!an,_anaRowIndex:an?an._rowIndex:null});
+  });
+  analisi.forEach(a=>{
+    if(!orgSet.has(a._nome.toLowerCase())){
+      merged.push({_nome:a._nome,_eta:parseInt(a['Età'])||0,_comitato:a['Comitato']||'',_qualifica:'',_stato:'Non in organico',_anz:0,_years:a._years,_totale:a._totale,_inOrganico:false,_inAnalisi:true,_tipo:'Arbitro',_rowIndex:a._rowIndex,_anaRowIndex:a._rowIndex});
+    }
+  });
+  mergedOrganico=merged.filter(a=>a._inOrganico);
+  mergedNonOrganico=merged.filter(a=>!a._inOrganico);
+}
+
+function render(){
+renderKPI();renderCharts();renderAnalysis();renderArbitriTable();renderNonOrgTable();renderSupTable();setupFilters();
+}
+
+function renderKPI(){
+const grid=document.getElementById('kpiGrid');
+const etaMedia=arbitri.length?(arbitri.reduce((s,a)=>s+a._eta,0)/arbitri.length).toFixed(1):0;
+const anzMedia=arbitri.filter(a=>a._dtPrimo).length?(arbitri.filter(a=>a._dtPrimo).reduce((s,a)=>s+a._anz,0)/arbitri.filter(a=>a._dtPrimo).length).toFixed(1):0;
+const candidati=mergedOrganico.filter(a=>a._totale>=10&&a._eta<30);
+const torneiTot=mergedOrganico.reduce((s,a)=>s+a._totale,0);
+const desCount = desData.tornei.length;
+
+const kpis=[
+{val:arbitri.length,label:'Arbitri in Organico',click:()=>showListModal('Arbitri in Organico',arbitri.map(a=>a._nome))},
+{val:supervisori.length,label:'Supervisori Beach',click:()=>showListModal('Supervisori Beach',supervisori.map(a=>a._nome))},
+{val:candidati.length,label:'Candidati Promozione',click:()=>showListModal('Candidati Promozione (≥10 tornei & <30 anni)',candidati.map(a=>`${a._nome} — ${a._totale} tornei, ${a._eta} anni`))},
+{val:etaMedia,label:'Età Media'},
+{val:anzMedia,label:'Anzianità Media (anni)'},
+{val:torneiTot.toLocaleString('it'),label:'Tornei Totali'},
+{val:desCount,label:'Tornei in Designazioni'}
+];
+grid.innerHTML=kpis.map((k,i)=>`<div class="kpi" data-kpi="${i}"><div class="val">${k.val}</div><div class="label">${k.label}</div></div>`).join('');
+grid.querySelectorAll('.kpi').forEach((el,i)=>{if(kpis[i].click)el.onclick=kpis[i].click});
+}
+
+let charts={};
+function renderCharts(){
+Object.values(charts).forEach(c=>c.destroy());charts={};
+Chart.defaults.color='#94a3b8';Chart.defaults.borderColor='#334155';
+
+const etaFasce=[{l:'<20',min:0,max:19},{l:'20-30',min:20,max:30},{l:'30-40',min:31,max:40},{l:'40-50',min:41,max:50},{l:'>50',min:51,max:200}];
+const etaData=etaFasce.map(f=>arbitri.filter(a=>a._eta>=f.min&&a._eta<=f.max).length);
+charts.eta=new Chart(document.getElementById('chartEta'),{type:'bar',data:{labels:etaFasce.map(f=>f.l),datasets:[{data:etaData,backgroundColor:['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7'],borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}},onClick:(e,el)=>{if(el.length){const f=etaFasce[el[0].index];showListModal(`Arbitri ${f.l} anni`,arbitri.filter(a=>a._eta>=f.min&&a._eta<=f.max).map(a=>`${a._nome} — ${a._eta} anni`))}}}});
+
+const anzFasce=[{l:'<2',min:0,max:1},{l:'2-5',min:2,max:5},{l:'5-10',min:6,max:10},{l:'10-20',min:11,max:20},{l:'>20',min:21,max:99}];
+const anzData=anzFasce.map(f=>arbitri.filter(a=>a._anz>=f.min&&a._anz<=f.max).length);
+charts.anz=new Chart(document.getElementById('chartAnz'),{type:'bar',data:{labels:anzFasce.map(f=>f.l+' anni'),datasets:[{data:anzData,backgroundColor:['#06b6d4','#8b5cf6','#f59e0b','#ec4899','#10b981'],borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}},onClick:(e,el)=>{if(el.length){const f=anzFasce[el[0].index];showListModal(`Arbitri anzianità ${f.l} anni`,arbitri.filter(a=>a._anz>=f.min&&a._anz<=f.max).map(a=>`${a._nome} — ${a._anz} anni`))}}}});
+
+const comMap={};arbitri.forEach(a=>{const c=a._comitato||'N/D';comMap[c]=(comMap[c]||0)+1});
+const comLabels=Object.keys(comMap).sort((a,b)=>comMap[b]-comMap[a]);
+const comColors=comLabels.map((_,i)=>`hsl(${(i*360/comLabels.length)%360},60%,55%)`);
+charts.com=new Chart(document.getElementById('chartComitato'),{type:'doughnut',data:{labels:comLabels,datasets:[{data:comLabels.map(l=>comMap[l]),backgroundColor:comColors}]},options:{plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:10}}}}}});
+
+const years=['2018','2019','2020','2021','2022','2023','2024','2025'];
+const yrTotals=years.map(y=>analisi.reduce((s,a)=>s+(a._years[y]||0),0));
+charts.stag=new Chart(document.getElementById('chartStagione'),{type:'line',data:{labels:years,datasets:[{label:'Tornei totali',data:yrTotals,borderColor:'var(--gold)',backgroundColor:'rgba(245,158,11,.15)',fill:true,tension:.3,pointRadius:5,pointBackgroundColor:'#f59e0b'}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+}
+
+function renderAnalysis(){
+const grid=document.getElementById('analysisGrid');
+const inattivi=mergedOrganico.filter(a=>(a._years['2024']||0)===0&&(a._years['2025']||0)===0);
+const inCalo=mergedOrganico.filter(a=>{
+if(!a._inAnalisi)return false;
+const prev=['2018','2019','2020','2021','2022','2023'].map(y=>a._years[y]||0).filter(v=>v>0);
+if(!prev.length)return false;
+const avg=prev.reduce((s,v)=>s+v,0)/prev.length;
+return(a._years['2024']||0)<avg;
+});
+const candidati=mergedOrganico.filter(a=>a._totale>=10&&a._eta<30);
+const attesa=arbitri.filter(a=>a._stato.toLowerCase().includes('attesa'));
+const nuovi=arbitri.filter(a=>a._anz<2&&a._dtPrimo);
+const veterani=arbitri.filter(a=>a._anz>20);
+const qualMap={};arbitri.forEach(a=>{const q=a._qualifica||'N/D';qualMap[q]=(qualMap[q]||0)+1});
+
+const cards=[
+{icon:'🔴',label:'Arbitri inattivi',val:inattivi.length,cls:'red',list:inattivi.map(a=>a._nome)},
+{icon:'🟡',label:'Arbitri in calo',val:inCalo.length,cls:'yellow',list:inCalo.map(a=>`${a._nome} — 2024: ${a._years['2024']||0}`)},
+{icon:'🟢',label:'Candidati promozione',val:candidati.length,cls:'green',list:candidati.map(a=>`${a._nome} — ${a._totale} tornei, ${a._eta} anni`)},
+{icon:'⚠️',label:'In attesa di rinnovo',val:attesa.length,cls:'orange',list:attesa.map(a=>a._nome)},
+{icon:'🆕',label:'Arbitri nuovi (<2 anni)',val:nuovi.length,cls:'blue',list:nuovi.map(a=>`${a._nome} — ${fmtDate(a._dtPrimo)}`)},
+{icon:'🏆',label:'Veterani (>20 anni)',val:veterani.length,cls:'purple',list:veterani.map(a=>`${a._nome} — ${a._anz} anni`)},
+{icon:'📊',label:'Qualifiche',val:Object.keys(qualMap).length+' tipi',cls:'teal',custom:()=>showQualificheModal(qualMap)}
+];
+
+grid.innerHTML=cards.map((c,i)=>`<div class="analysis-card ${c.cls}" data-a="${i}"><div class="a-val">${c.icon} ${c.val}</div><div class="a-label">${c.label}</div></div>`).join('');
+grid.querySelectorAll('.analysis-card').forEach((el,i)=>{
+el.onclick=()=>{if(cards[i].custom)cards[i].custom();else showListModal(`${cards[i].icon} ${cards[i].label}`,cards[i].list)};
+});
+}
+
+function showQualificheModal(qMap){
+openModal('📊 Distribuzione Qualifiche',`<canvas id="qualDonut" style="max-height:300px"></canvas><ul class="modal-list">${Object.entries(qMap).map(([k,v])=>`<li><span class="badge badge-${k.toLowerCase().substring(0,2)}">${k}</span> — ${v} arbitri</li>`).join('')}</ul>`);
+setTimeout(()=>{
+const c=document.getElementById('qualDonut');if(!c)return;
+new Chart(c,{type:'doughnut',data:{labels:Object.keys(qMap),datasets:[{data:Object.values(qMap),backgroundColor:['#7c3aed','#3b82f6','#22c55e','#f59e0b','#ef4444']}]},options:{plugins:{legend:{position:'bottom'}}}});
+},100);
+}
+
+const arbCols=[
+  {k:'_nome',l:'Nominativo',editable:false},
+  {k:'_eta',l:'Età',n:1,editable:false},
+  {k:'_qualifica',l:'Qualifica',editable:true,tab:'Organico',header:'Qualifica'},
+  {k:'_comitato',l:'Comitato',editable:true,tab:'Organico',header:'Comitato Territoriale'},
+  {k:'_anz',l:'Anzianità',n:1,editable:false},
+  {k:'y2024',l:'2024',n:1,editable:true,tab:'Analisi stagioni',header:'2024'},
+  {k:'y2025',l:'2025',n:1,editable:true,tab:'Analisi stagioni',header:'2025'},
+  {k:'_totale',l:'Totale',n:1,editable:false},
+  {k:'_desTot',l:'Designazioni',n:1,editable:false}
+];
+
+function renderArbitriTable(data){
+data=data||mergedOrganico;
+const tbl=document.getElementById('arbitriTable');
+const thead=tbl.querySelector('thead tr');
+thead.innerHTML=arbCols.map((c,i)=>{
+let cls='';if(i===sortCol)cls=sortDir===1?'sorted-asc':'sorted-desc';
+return`<th class="${cls}" data-i="${i}">${c.l}${c.editable&&useAPI?' ✏️':''}</th>`;
+}).join('');
+thead.querySelectorAll('th').forEach(th=>{
+th.onclick=()=>{const i=+th.dataset.i;if(sortCol===i)sortDir*=-1;else{sortCol=i;sortDir=1}renderArbitriTable(applyFilters())}
+});
+
+const tbody=tbl.querySelector('tbody');
+tbody.innerHTML=data.map(a=>{
+const y24=a._years?a._years['2024']||0:0;
+const y25=a._years?a._years['2025']||0:0;
+const cognome = a._nome.split(' ')[0] || a._nome;
+const desList = getDesignazioniForArbitro(a._nome);
+const desTot = desList.length;
+return`<tr data-nome="${a._nome}"><td style="cursor:pointer;color:var(--blue)">${a._nome}</td><td>${a._eta}</td><td class="${arbCols[2].editable&&useAPI?'editable':''}" data-col="2"><span class="badge badge-${(a._qualifica||'').toLowerCase().substring(0,2)}">${a._qualifica||'-'}</span></td><td class="${arbCols[3].editable&&useAPI?'editable':''}" data-col="3">${a._comitato||'-'}</td><td>${a._anz||0}</td><td class="${arbCols[5].editable&&useAPI?'editable':''}" data-col="5">${y24}</td><td class="${arbCols[6].editable&&useAPI?'editable':''}" data-col="6">${y25}</td><td style="font-weight:700;color:var(--gold)">${a._totale||0}</td><td>${desTot}</td></tr>`;
+}).join('');
+
+if(sortCol>=0){
+const rows=[...tbody.querySelectorAll('tr')];
+const col=arbCols[sortCol];
+rows.sort((a,b)=>{
+const av=col.n?+(a.children[sortCol].textContent):a.children[sortCol].textContent.toLowerCase();
+const bv=col.n?+(b.children[sortCol].textContent):b.children[sortCol].textContent.toLowerCase();
+return(av<bv?-1:av>bv?1:0)*sortDir;
+});
+rows.forEach(r=>tbody.appendChild(r));
+}
+
+tbody.querySelectorAll('tr').forEach(tr=>{
+  tr.children[0].onclick=(e)=>{e.stopPropagation();showProfile(tr.dataset.nome)};
+  tr.querySelectorAll('td.editable').forEach(td=>{
+    td.onclick=(e)=>{e.stopPropagation();startEdit(td, tr.dataset.nome)};
+  });
+});
+}
+
+function getDesignazioniForArbitro(nome) {
+  // Try matching by cognome (first word of nome)
+  const cognome = nome.split(' ')[0].toLowerCase();
+  // Also try full name match
+  return desData.arbitriMap.get(cognome) || desData.arbitriMap.get(nome.toLowerCase()) || [];
+}
+
+function startEdit(td, nome) {
+  if (td.classList.contains('editing')) return;
+  const colIdx = +td.dataset.col;
+  const colDef = arbCols[colIdx];
+  const currentText = td.textContent.trim();
+  const currentVal = currentText === '-' ? '' : currentText;
+  td.classList.add('editing');
+  const input = document.createElement('input');
+  input.type = 'text'; input.value = currentVal;
+  td.innerHTML = ''; td.appendChild(input);
+  input.focus(); input.select();
+  const finish = async () => {
+    const newVal = input.value.trim();
+    td.classList.remove('editing'); td.classList.add('saving');
+    td.textContent = newVal || '-';
+    const arb = merged.find(a => a._nome === nome);
+    if (!arb) { td.classList.remove('saving'); return; }
+    let sheetRow, sheetCol;
+    if (colDef.tab === 'Organico') {
+      sheetRow = arb._rowIndex;
+      const headers = Object.keys(arb).filter(k => !k.startsWith('_'));
+      sheetCol = headers.indexOf(colDef.header) + 1;
+      if (sheetCol <= 0 && orgHeaders.length) sheetCol = orgHeaders.indexOf(colDef.header) + 1;
+    } else {
+      sheetRow = arb._anaRowIndex;
+      sheetCol = anaHeaders.length ? anaHeaders.indexOf(colDef.header) + 1 : null;
+    }
+    if (!sheetRow || !sheetCol) {
+      td.classList.remove('saving'); td.classList.add('save-error');
+      setTimeout(() => td.classList.remove('save-error'), 2000); return;
+    }
+    const ok = await saveCellCORS(colDef.tab, sheetRow, sheetCol, newVal);
+    td.classList.remove('saving');
+    if (ok) { td.classList.add('saved'); setTimeout(() => td.classList.remove('saved'), 1500); }
+    else { td.classList.add('save-error'); setTimeout(() => td.classList.remove('save-error'), 2000); }
+  };
+  input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { td.classList.remove('editing'); td.textContent = currentVal || '-'; } };
+  input.onblur = finish;
+}
+
+function renderNonOrgTable(){
+const tbody=document.getElementById('nonOrgTable').querySelector('tbody');
+const years=['2018','2019','2020','2021','2022','2023','2024','2025'];
+tbody.innerHTML=mergedNonOrganico.map(a=>{
+const yCells=years.map(y=>`<td>${(a._years&&a._years[y])||0}</td>`).join('');
+return`<tr data-nome="${a._nome}"><td style="cursor:pointer;color:var(--blue)">${a._nome}</td><td>${a._eta||'-'}</td><td>${a._comitato||'-'}</td>${yCells}<td style="font-weight:700;color:var(--gold)">${a._totale||0}</td></tr>`;
+}).join('');
+if(!mergedNonOrganico.length)tbody.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--muted)">Nessun arbitro non in organico</td></tr>';
+tbody.querySelectorAll('tr[data-nome]').forEach(tr=>{
+  tr.children[0].onclick=(e)=>{e.stopPropagation();showProfile(tr.dataset.nome)};
+});
+}
+
+function renderSupTable(){
+const tbody=document.getElementById('supTable').querySelector('tbody');
+tbody.innerHTML=supervisori.map(s=>`<tr><td>${s._nome}</td><td>${s._eta}</td><td>${s._qualifica||'-'}</td><td>${s._comitato||'-'}</td><td>${s._stato||'-'}</td><td>${s._anz||0} anni</td></tr>`).join('');
+}
+
+function setupFilters(){
+const sel=document.getElementById('filterComitato');
+const coms=[...new Set(arbitri.map(a=>a._comitato).filter(Boolean))].sort();
+sel.innerHTML='<option value="">Tutti i comitati</option>'+coms.map(c=>`<option>${c}</option>`).join('');
+const selS=document.getElementById('filterStato');
+const stats=[...new Set(arbitri.map(a=>a._stato).filter(Boolean))].sort();
+selS.innerHTML='<option value="">Tutti gli stati</option>'+stats.map(c=>`<option>${c}</option>`).join('');
+['searchName','filterComitato','filterStato','filterEta'].forEach(id=>{
+document.getElementById(id).addEventListener('input',()=>renderArbitriTable(applyFilters()));
+document.getElementById(id).addEventListener('change',()=>renderArbitriTable(applyFilters()));
+});
+}
+
+function applyFilters(){
+let d=[...mergedOrganico];
+const q=document.getElementById('searchName').value.toLowerCase();
+const com=document.getElementById('filterComitato').value;
+const stato=document.getElementById('filterStato').value;
+const eta=document.getElementById('filterEta').value;
+if(q)d=d.filter(a=>a._nome.toLowerCase().includes(q));
+if(com)d=d.filter(a=>a._comitato===com);
+if(stato)d=d.filter(a=>a._stato===stato);
+if(eta){const ranges={'<20':[0,19],'20-30':[20,30],'30-40':[31,40],'40-50':[41,50],'>50':[51,200]};const[mn,mx]=ranges[eta]||[0,200];d=d.filter(a=>a._eta>=mn&&a._eta<=mx);}
+return d;
+}
+
+function getCatBadgeClass(tipo) {
+  const t = tipo.toLowerCase();
+  if (t.startsWith('b1')) return 'badge-b1';
+  if (t.startsWith('b2')) return 'badge-b2';
+  if (t.includes('u1') || t.includes('u2')) return 'badge-u1';
+  if (t.includes('tdt')) return 'badge-td';
+  if (t.includes('student')) return 'badge-st';
+  if (t.includes('fin') || t.includes('cips')) return 'badge-fi';
+  return 'badge-re';
+}
+
+function showProfile(nome){
+const a=merged.find(x=>x._nome===nome);if(!a)return;
+const years=['2018','2019','2020','2021','2022','2023','2024','2025'];
+const vals=years.map(y=>(a._years&&a._years[y])||0);
+
+// Get designazioni for this arbitro
+const desList = getDesignazioniForArbitro(nome);
+
+// Category breakdown
+const catCount = {};
+desList.forEach(t => {
+  const tipo = (t.tipo || 'N/D').trim();
+  catCount[tipo] = (catCount[tipo] || 0) + 1;
+});
+
+let catBadgesHtml = '';
+if (Object.keys(catCount).length) {
+  catBadgesHtml = '<div class="profile-section"><h4>📋 Breakdown per Categoria</h4><div class="cat-badges">' +
+    Object.entries(catCount).sort((a,b)=>b[1]-a[1]).map(([tipo, count]) =>
+      `<span class="cat-badge ${getCatBadgeClass(tipo)}" style="background:${getCatBgColor(tipo)}">${tipo}: ${count}</span>`
+    ).join('') + '</div></div>';
+}
+
+// Tornei table
+let torneiHtml = '';
+if (desList.length) {
+  const sorted = [...desList].sort((a,b) => {
+    // Try to sort by date
+    const da = extractYear(a.data), db = extractYear(b.data);
+    return da - db;
+  });
+  torneiHtml = `<div class="profile-section"><h4>🏐 Tornei Arbitrati (${desList.length} designazioni)</h4>
+    <div style="max-height:250px;overflow-y:auto"><table class="tornei-table"><thead><tr><th>Tipo</th><th>Data</th><th>Luogo</th></tr></thead><tbody>` +
+    sorted.map(t => `<tr><td><span class="badge ${getCatBadgeClass(t.tipo)}">${t.tipo||'-'}</span></td><td>${t.data||'-'}</td><td>${t.luogo||'-'}</td></tr>`).join('') +
+    '</tbody></table></div></div>';
+}
+
+const info=`
+<div class="profile-grid">
+<div><strong>Età:</strong> ${a._eta}</div>
+<div><strong>Qualifica:</strong> ${a._qualifica||'-'}</div>
+<div><strong>Comitato:</strong> ${a._comitato||'-'}</div>
+<div><strong>Anzianità:</strong> ${a._anz||0} anni</div>
+<div><strong>Stato:</strong> ${a._stato||'-'}</div>
+<div><strong>Totale tornei:</strong> <span style="color:var(--gold);font-weight:700">${a._totale||0}</span></div>
+${a._dtPrimo?`<div><strong>Primo tess.:</strong> ${fmtDate(a._dtPrimo)}</div>`:''}
+${!a._inOrganico?'<div style="color:var(--red)">⚠️ Non in organico</div>':''}
+<div><strong>Designazioni:</strong> ${desList.length}</div>
+</div>
+${catBadgesHtml}
+${torneiHtml}
+<div class="profile-section"><h4>📈 Attività per Anno</h4><canvas id="profileChart"></canvas></div>`;
+
+openModal(`👤 ${nome}`,info);
+setTimeout(()=>{
+const c=document.getElementById('profileChart');if(!c)return;
+new Chart(c,{type:'bar',data:{labels:years,datasets:[{data:vals,backgroundColor:'#f59e0b',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+},100);
+}
+
+function extractYear(dateStr) {
+  if (!dateStr) return 0;
+  const m = dateStr.match(/(\d{4})/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function getCatBgColor(tipo) {
+  const t = (tipo||'').toLowerCase();
+  if (t.startsWith('b1')) return 'rgba(239,68,68,0.2)';
+  if (t.startsWith('b2')) return 'rgba(59,130,246,0.2)';
+  if (t.includes('u1') || t.includes('u2')) return 'rgba(168,85,247,0.2)';
+  if (t.includes('tdt')) return 'rgba(20,184,166,0.2)';
+  if (t.includes('student')) return 'rgba(245,158,11,0.2)';
+  return 'rgba(100,116,139,0.2)';
+}
+
+function openModal(title,html){
+document.getElementById('modalTitle').textContent=title;
+document.getElementById('modalBody').innerHTML=html;
+document.getElementById('modalOverlay').classList.add('active');
+}
+function showListModal(title,items){
+openModal(title,items.length?`<ul class="modal-list">${items.map(i=>`<li>${i}</li>`).join('')}</ul>`:'<p style="color:var(--muted)">Nessun elemento</p>');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('active')}
+document.getElementById('modalClose').onclick=closeModal;
+document.getElementById('modalOverlay').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+loadData().catch(err=>{
+document.getElementById('spinner').innerHTML=`<div style="color:var(--red);text-align:center"><h2>Errore caricamento</h2><p>${err.message}</p><button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;cursor:pointer">Riprova</button></div>`;
+});
+</script>
+</body>
+</html>
