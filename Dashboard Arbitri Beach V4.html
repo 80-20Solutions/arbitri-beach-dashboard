@@ -1,0 +1,249 @@
+<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+<title>Dashboard Arbitri V4 - FIPAV CRER</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{font-family:sans-serif;background:#0f172a;color:#e2e8f0;margin:0}
+.header{background:#1e3a5f;padding:20px;text-align:center;border-bottom:3px solid #f59e0b}
+.section{max-width:1200px;margin:20px auto;padding:15px;background:#1e293b;border-radius:8px}
+h2{border-left:5px solid #f59e0b;padding-left:10px;margin-bottom:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
+.card{background:#334155;padding:15px;border-radius:8px;text-align:center;cursor:pointer;transition:background .2s,transform .15s}
+.card:hover{background:#3d4f6a;transform:translateY(-2px)}
+.v{font-size:2em;font-weight:bold;color:#f59e0b}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:8px;text-align:left;border-bottom:1px solid #475569}
+th{background:#475569}
+.inactive{color:#94a3b8;font-style:italic}
+.zero{background:#ef444422;color:#ef4444}
+.highlight{background:#22c55e22;color:#22c55e;font-weight:bold}
+.chart-container{height:300px}
+table tbody tr{cursor:pointer;transition:background .2s}
+table tbody tr:hover{background:#334155!important}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:1000;justify-content:center;align-items:center;animation:fadeIn .2s}
+.modal-overlay.active{display:flex}
+.modal{background:#1e293b;border:1px solid #334155;border-radius:12px;max-width:600px;width:90%;max-height:80vh;display:flex;flex-direction:column;animation:slideIn .25s}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #334155}
+.modal-header h3{margin:0;color:#f59e0b}
+.modal-close{background:none;border:none;color:#94a3b8;font-size:1.5em;cursor:pointer;padding:0 4px;line-height:1}
+.modal-close:hover{color:#e2e8f0}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-body table{margin:0}
+.modal-body .mini-stat{display:inline-block;background:#334155;padding:6px 14px;border-radius:6px;margin:4px;text-align:center}
+.modal-body .mini-stat .label{font-size:.75em;color:#94a3b8}
+.modal-body .mini-stat .val{font-size:1.2em;font-weight:bold;color:#f59e0b}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+</style></head><body>
+<div class="header"><h1>🏐 Dashboard Arbitri Beach V4</h1><p>Analisi Età e Attività Stagionale — Interattiva</p></div>
+<div class="section"><div class="grid">
+<div class="card" onclick="showKPI('organico')"><h3>Arbitri Organico</h3><div class="v">65</div></div>
+<div class="card" onclick="showKPI('candidati')"><h3>Candidati Promozione</h3><div class="v" style="color:#22c55e">3</div><small>≥10 tornei & <30 anni</small></div>
+<div class="card" onclick="showKPI('eta')"><h3>Eta Media</h3><div class="v">40</div></div>
+</div></div><div class="section"><h2>🎂 Distribuzione per Età</h2><div class="grid"><div style="grid-column: span 2"><canvas id="chartAge"></canvas></div><div class="card" onclick="showAge('< 20')"><h3>< 20</h3><div class="v" style="color:#3b82f6">5</div></div><div class="card" onclick="showAge('20-30')"><h3>20 - 30</h3><div class="v" style="color:#3b82f6">15</div></div><div class="card" onclick="showAge('30-40')"><h3>30 - 40</h3><div class="v" style="color:#3b82f6">11</div></div><div class="card" onclick="showAge('40-50')"><h3>40 - 50</h3><div class="v" style="color:#3b82f6">15</div></div><div class="card" onclick="showAge('> 50')"><h3>> 50</h3><div class="v" style="color:#3b82f6">19</div></div></div></div><div class="section"><h2>🗓️ Attività nelle Stagioni</h2><div style="overflow-x:auto"><table><thead><tr><th>Arbitro</th><th>Età</th><th>Comitato</th><th>2018</th><th>2019</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>Totale</th></tr></thead><tbody id="tBody"></tbody></table></div></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+<div class="modal"><div class="modal-header"><h3 id="modalTitle"></h3><button class="modal-close" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div></div>
+</div>
+
+<script>
+const SEASONS = [2018,2019,2021,2022,2023,2024,2025];
+const DATA = [
+["Ait El Bachir Anwar",18,"Modena",0,0,0,0,0,0,0],
+["Albani Alessandro",51,"Romagna Uno",0,3,1,1,0,0,0],
+["Alessandria Gabriella",54,"Bologna",0,0,0,0,3,3,0],
+["Ancona Massimo",33,"Bologna",0,2,0,0,0,0,0],
+["Avanzolini Alberto",27,"Romagna Uno",1,6,2,3,1,2,0],
+["Barducci Paolo",58,"Ravenna",0,4,0,2,0,0,0],
+["Besazza Riccardo",37,"Bologna",0,0,0,0,0,0,0],
+["Bombonato Irene",25,"Ferrara",0,1,4,1,0,0,0],
+["Brunelli Andrea",61,"Ravenna",3,5,5,2,5,5,1],
+["Buffagni Federico",18,"Reggio Emilia",0,0,0,0,0,0,0],
+["Bugli Giovanni",27,"Romagna Uno",0,0,0,0,0,0,0],
+["Cagnazzo Chiara",21,"Bologna",0,0,0,0,0,1,1],
+["Carannante Nicola",51,"Ravenna",1,1,0,0,0,3,1],
+["Carota Giacomo",19,"Piacenza",0,0,0,0,1,7,2],
+["Casadei Stefania",45,"Romagna Uno",1,4,0,1,3,0,0],
+["Comandini Juri",53,"Romagna Uno",2,5,2,0,0,0,0],
+["Cornacchia Pamela",46,"Romagna Uno",0,0,0,0,0,0,0],
+["Costa Rossella",19,"Parma",0,0,0,0,0,0,0],
+["Crescentini Davide",44,"Romagna Uno",0,0,0,0,0,0,0],
+["D'Agosta Angela",21,"Bologna",0,0,0,0,0,2,0],
+["De Benedittis Damiano",56,"Romagna Uno",0,0,0,0,0,0,0],
+["Doddi Gian Luca",56,"Modena",0,0,0,0,0,0,0],
+["Drei Marco",62,"Bologna",2,9,3,6,6,0,0],
+["Feijo Francesco",21,"Parma",0,0,0,0,0,3,1],
+["Filazzola Vincenzo",40,"Bologna",1,3,1,1,0,0,0],
+["Gardella Tatiana",27,"Bologna",0,0,0,0,0,0,0],
+["Giangolini Andrea",36,"Reggio Emilia",0,0,0,0,0,0,0],
+["Grazian Ivanoe Danilo",60,"Bologna",0,0,0,0,0,0,0],
+["Greco Luigi",46,"Romagna Uno",5,7,2,2,4,4,1],
+["Grillo Stefano",25,"Modena",0,0,0,0,1,2,0],
+["Khatra Jaswinder Singh",28,"Piacenza",0,0,0,0,0,0,0],
+["Levada Giulio",24,"Modena",0,0,0,0,0,0,0],
+["Maiellano Michele",49,"Modena",0,0,0,0,0,0,0],
+["Maiellano Miriam",51,"Modena",0,0,0,0,0,0,0],
+["Malpighi Mauro",72,"Modena",4,7,1,4,2,3,1],
+["Marano Maria",54,"Modena",1,4,1,1,1,3,1],
+["Marchetti Marco",52,"Romagna Uno",6,9,5,6,4,7,0],
+["Massone Mattia Vincenzo",38,"Bologna",0,0,0,0,0,2,1],
+["Matrone Raffaele",66,"Romagna Uno",0,0,0,0,0,0,0],
+["Matteucci Alessia",32,"Bologna",0,0,0,0,0,0,1],
+["Nanni Luca",37,"Romagna Uno",0,0,0,0,0,1,1],
+["Nuccio Clelia",42,"Romagna Uno",0,0,0,0,0,0,0],
+["Pastore Fedele",60,"Ferrara",0,1,0,0,0,1,0],
+["Piccininni Tommaso",47,"Romagna Uno",0,5,4,0,1,1,0],
+["Piccotti Arianna",45,"Bologna",0,0,0,0,0,0,0],
+["Prokopenko Andrey",21,"Piacenza",0,0,0,0,0,0,0],
+["Ragone Carmela",38,"Romagna Uno",5,8,1,1,3,0,0],
+["Ravaioli Flavia",39,"Ravenna",2,8,2,3,0,0,0],
+["Righi Francesca",45,"Romagna Uno",1,3,0,0,0,0,0],
+["Rosati Andrea",52,"Romagna Uno",4,7,2,6,7,5,1],
+["Rossi Daniele",31,"Reggio Emilia",0,5,2,1,0,0,0],
+["Salamina Giuseppe",50,"Romagna Uno",0,0,0,0,0,0,0],
+["Salcone Maria Arcangela",43,"Parma",0,4,3,3,2,5,1],
+["Sartini Emanuele",40,"Romagna Uno",0,3,0,0,0,0,0],
+["Scerrino Pietro",47,"Bologna",0,0,0,0,0,1,2],
+["Schino Francesco Pio",26,"Romagna Uno",4,6,1,1,0,0,0],
+["Sicuri Enrico",56,"Parma",0,0,0,0,0,0,0],
+["Spampinato Cristian",19,"Romagna Uno",0,0,0,0,1,4,1],
+["Squillaci Emilio",41,"Parma",0,0,0,0,2,2,1],
+["Tawfik Henawy Jan",30,"Bologna",3,1,4,0,0,0,0],
+["Tramontano Ciro",30,"Romagna Uno",6,7,2,1,6,6,1],
+["Valdiserri Sara",27,"Romagna Uno",0,0,0,0,0,1,0],
+["Vigilante Marika",22,"Bologna",0,0,0,0,0,0,0],
+["Vincenzi Emanuela",48,"Modena",3,4,0,1,1,1,0]
+];
+
+// Build table
+const tbody = document.getElementById('tBody');
+DATA.forEach((r,i)=>{
+    const tot = r.slice(3).reduce((a,b)=>a+b,0);
+    const isZero = tot===0;
+    const tr = document.createElement('tr');
+    if(isZero) tr.className='zero';
+    tr.onclick=()=>showProfile(i);
+    let h = `<td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td>`;
+    for(let s=3;s<10;s++){
+        const v=r[s];
+        h+=`<td class="${v>0?'highlight':'inactive'}">${v}</td>`;
+    }
+    h+=`<td><b>${tot}</b></td>`;
+    tr.innerHTML=h;
+    tbody.appendChild(tr);
+});
+
+// Modal helpers
+function openModal(title,html){
+    document.getElementById('modalTitle').textContent=title;
+    document.getElementById('modalBody').innerHTML=html;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+function closeModal(){
+    document.getElementById('modalOverlay').classList.remove('active');
+    // destroy any mini charts
+    if(window._miniChart){window._miniChart.destroy();window._miniChart=null;}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+function total(r){return r.slice(3).reduce((a,b)=>a+b,0);}
+
+// KPI clicks
+function showKPI(type){
+    if(type==='organico'){
+        let h='<table><tr><th>#</th><th>Nome</th><th>Età</th><th>Comitato</th></tr>';
+        DATA.forEach((r,i)=>{h+=`<tr><td>${i+1}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`;});
+        h+='</table>';
+        openModal('Arbitri Organico — 65',h);
+    } else if(type==='candidati'){
+        const cand=DATA.filter(r=>total(r)>=10 && r[1]<30);
+        let h='<p>Criteri: ≥10 tornei totali & età <30</p><table><tr><th>Nome</th><th>Età</th><th>Comitato</th><th>Tornei</th></tr>';
+        cand.forEach(r=>{h+=`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td style="color:#22c55e;font-weight:bold">${total(r)}</td></tr>`;});
+        h+='</table>';
+        openModal('Candidati Promozione — '+cand.length,h);
+    } else if(type==='eta'){
+        const ages=DATA.map(r=>r[1]).sort((a,b)=>a-b);
+        const min=ages[0],max=ages[ages.length-1];
+        const med=ages.length%2?ages[Math.floor(ages.length/2)]:((ages[ages.length/2-1]+ages[ages.length/2])/2);
+        const avg=Math.round(ages.reduce((a,b)=>a+b,0)/ages.length);
+        const bands={'< 20':0,'20-30':0,'30-40':0,'40-50':0,'> 50':0};
+        DATA.forEach(r=>{const a=r[1];if(a<20)bands['< 20']++;else if(a<=30)bands['20-30']++;else if(a<=40)bands['30-40']++;else if(a<=50)bands['40-50']++;else bands['> 50']++;});
+        let h='<div style="text-align:center;margin-bottom:16px">';
+        [{l:'Min',v:min},{l:'Max',v:max},{l:'Media',v:avg},{l:'Mediana',v:med}].forEach(s=>{
+            h+=`<div class="mini-stat"><div class="val">${s.v}</div><div class="label">${s.l}</div></div>`;
+        });
+        h+='</div><table><tr><th>Fascia</th><th>Arbitri</th><th>%</th></tr>';
+        for(const[k,v] of Object.entries(bands)){h+=`<tr><td>${k}</td><td>${v}</td><td>${Math.round(v/65*100)}%</td></tr>`;}
+        h+='</table>';
+        openModal('Statistiche Età',h);
+    }
+}
+
+// Age band click
+function ageFilter(label){
+    return DATA.filter(r=>{
+        const a=r[1];
+        if(label==='< 20') return a<20;
+        if(label==='20-30') return a>=20&&a<=30;
+        if(label==='30-40') return a>30&&a<=40;
+        if(label==='40-50') return a>40&&a<=50;
+        if(label==='> 50') return a>50;
+    });
+}
+function showAge(label){
+    const list=ageFilter(label);
+    let h=`<table><tr><th>Nome</th><th>Età</th><th>Comitato</th><th>Tornei</th></tr>`;
+    list.forEach(r=>{h+=`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${total(r)}</td></tr>`;});
+    h+='</table>';
+    openModal(`Fascia ${label} — ${list.length} arbitri`,h);
+}
+
+// Profile click
+function showProfile(i){
+    const r=DATA[i];
+    const vals=r.slice(3);
+    const tot=total(r);
+    const trend=vals[vals.length-1]-vals[vals.length-2];
+    const trendIcon=trend>0?'📈':trend<0?'📉':'➡️';
+    let h=`<div style="text-align:center;margin-bottom:16px">`;
+    h+=`<div class="mini-stat"><div class="val">${r[1]}</div><div class="label">Età</div></div>`;
+    h+=`<div class="mini-stat"><div class="val">${r[2]}</div><div class="label">Comitato</div></div>`;
+    h+=`<div class="mini-stat"><div class="val">${tot}</div><div class="label">Tornei Tot.</div></div>`;
+    h+=`<div class="mini-stat"><div class="val">${trendIcon} ${trend>=0?'+':''}${trend}</div><div class="label">Trend</div></div>`;
+    h+=`</div><canvas id="miniChart" height="200"></canvas>`;
+    openModal(r[0],h);
+    // render mini chart
+    setTimeout(()=>{
+        const ctx=document.getElementById('miniChart');
+        if(!ctx) return;
+        window._miniChart=new Chart(ctx,{
+            type:'bar',
+            data:{labels:SEASONS.map(String),datasets:[{label:'Tornei',data:vals,backgroundColor:'#f59e0b',borderRadius:4}]},
+            options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}
+        });
+    },50);
+}
+
+// Chart
+Chart.defaults.color='#94a3b8';
+const ageLabels=["< 20","20-30","30-40","40-50","> 50"];
+const ageChart=new Chart(document.getElementById('chartAge'), {
+    type: 'bar',
+    data: {
+        labels: ageLabels.map(l=>l.replace('-',' - ')),
+        datasets: [{ label: 'Numero Arbitri', data: [5, 15, 11, 15, 19], backgroundColor: '#3b82f6', borderRadius:4 }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        onClick(e,els){
+            if(els.length){
+                const idx=els[0].index;
+                showAge(ageLabels[idx]);
+            }
+        }
+    }
+});
+</script></body></html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Arbitri Beach Volley</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--card:#1e293b;--card2:#334155;--gold:#f59e0b;--text:#e2e8f0;--muted:#94a3b8;--red:#ef4444;--green:#22c55e;--yellow:#eab308;--blue:#3b82f6}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:linear-gradient(135deg,#1e293b,#334155);padding:24px 32px;border-bottom:2px solid var(--gold);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header h1{font-size:1.6rem;color:var(--gold)}
+.header .sub{color:var(--muted);font-size:.85rem}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.kpi{background:var(--card);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;border:1px solid transparent}
+.kpi:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.kpi .val{font-size:2rem;font-weight:700;color:var(--gold)}
+.kpi .label{color:var(--muted);font-size:.8rem;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.chart-box{background:var(--card);border-radius:12px;padding:20px}
+.chart-box h3{color:var(--gold);margin-bottom:12px;font-size:.95rem}
+.analysis-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+.analysis-card{background:var(--card);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;border-left:4px solid var(--muted)}
+.analysis-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.analysis-card .a-val{font-size:1.8rem;font-weight:700}
+.analysis-card .a-label{font-size:.8rem;color:var(--muted);margin-top:4px}
+.analysis-card.red{border-color:var(--red)}.analysis-card.red .a-val{color:var(--red)}
+.analysis-card.yellow{border-color:var(--yellow)}.analysis-card.yellow .a-val{color:var(--yellow)}
+.analysis-card.green{border-color:var(--green)}.analysis-card.green .a-val{color:var(--green)}
+.analysis-card.orange{border-color:#f97316}.analysis-card.orange .a-val{color:#f97316}
+.analysis-card.blue{border-color:var(--blue)}.analysis-card.blue .a-val{color:var(--blue)}
+.analysis-card.purple{border-color:#a855f7}.analysis-card.purple .a-val{color:#a855f7}
+.analysis-card.teal{border-color:#14b8a6}.analysis-card.teal .a-val{color:#14b8a6}
+.section-title{color:var(--gold);font-size:1.1rem;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--card2)}
+.filters{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filters input,.filters select{background:var(--card2);border:1px solid #475569;color:var(--text);padding:8px 12px;border-radius:8px;font-size:.85rem}
+.filters input:focus,.filters select:focus{outline:none;border-color:var(--gold)}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}
+thead th{background:var(--card2);padding:10px 12px;text-align:left;font-size:.8rem;color:var(--gold);cursor:pointer;user-select:none;white-space:nowrap}
+thead th:hover{background:#475569}
+thead th.sorted-asc::after{content:' ▲'}
+thead th.sorted-desc::after{content:' ▼'}
+tbody tr{border-bottom:1px solid #1e293b;cursor:pointer;transition:background .15s}
+tbody tr:hover{background:var(--card2)}
+td{padding:8px 12px;font-size:.85rem}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;justify-content:center;align-items:center;animation:fadeIn .2s}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);border-radius:16px;padding:24px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto;position:relative;border:1px solid var(--card2)}
+.modal h2{color:var(--gold);margin-bottom:16px;font-size:1.2rem}
+.modal .close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer}
+.modal .close:hover{color:var(--text)}
+.modal table{font-size:.8rem}
+.modal canvas{max-height:250px}
+.modal-list{list-style:none;max-height:400px;overflow-y:auto}
+.modal-list li{padding:8px 12px;border-bottom:1px solid var(--card2);font-size:.85rem}
+.modal-list li:hover{background:var(--card2)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:600}
+.badge-pr{background:#7c3aed33;color:#a78bfa}.badge-re{background:#2563eb33;color:#60a5fa}.badge-na{background:#65a30d33;color:#a3e635}
+.spinner-overlay{display:flex;position:fixed;inset:0;background:var(--bg);z-index:2000;justify-content:center;align-items:center;flex-direction:column;gap:16px}
+.spinner{width:48px;height:48px;border:4px solid var(--card2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+.qualifica-donut-container{width:80px;height:80px;display:inline-block;vertical-align:middle}
+.table-wrapper{overflow-x:auto;border-radius:12px;margin-bottom:24px}
+</style>
+</head>
+<body>
+<div class="spinner-overlay" id="spinner"><div class="spinner"></div><div style="color:var(--muted)">Caricamento dati live...</div></div>
+
+<div class="header">
+<div><h1>🏐 Dashboard Arbitri Beach Volley</h1><div class="sub">Dati live da Google Sheets</div></div>
+<div class="sub" id="lastUpdate"></div>
+</div>
+
+<div class="container">
+<div class="kpi-grid" id="kpiGrid"></div>
+
+<div class="charts-grid">
+<div class="chart-box"><h3>📊 Distribuzione per Età</h3><canvas id="chartEta"></canvas></div>
+<div class="chart-box"><h3>📊 Distribuzione per Anzianità</h3><canvas id="chartAnz"></canvas></div>
+<div class="chart-box"><h3>📊 Distribuzione per Comitato</h3><canvas id="chartComitato"></canvas></div>
+<div class="chart-box"><h3>📈 Attività per Stagione</h3><canvas id="chartStagione"></canvas></div>
+</div>
+
+<div class="section-title">⚡ Analisi Critica</div>
+<div class="analysis-grid" id="analysisGrid"></div>
+
+<div class="section-title">👨‍⚖️ Tabella Arbitri</div>
+<div class="filters" id="arbitriFilters">
+<input type="text" id="searchName" placeholder="🔍 Cerca nominativo...">
+<select id="filterComitato"><option value="">Tutti i comitati</option></select>
+<select id="filterStato"><option value="">Tutti gli stati</option></select>
+<select id="filterEta"><option value="">Tutte le età</option><option value="<20">&lt;20</option><option value="20-30">20-30</option><option value="30-40">30-40</option><option value="40-50">40-50</option><option value=">50">&gt;50</option></select>
+</div>
+<div class="table-wrapper"><table id="arbitriTable"><thead><tr></tr></thead><tbody></tbody></table></div>
+
+<div class="section-title">🏖️ Tabella Supervisori</div>
+<div class="table-wrapper"><table id="supTable"><thead><tr><th>Nominativo</th><th>Età</th><th>Qualifica</th><th>Comitato</th><th>Stato</th><th>Anzianità</th></tr></thead><tbody></tbody></table></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modal"><button class="close" id="modalClose">&times;</button><h2 id="modalTitle"></h2><div id="modalBody"></div></div></div>
+
+<script>
+const PROXY='https://corsproxy.io/?url=';
+const SHEET_ID='11yFEnHfKU2mu8ym5JqBn11Wu1PQYV1Xj8nYfy576Zoo';
+const ORG_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1005819633`;
+const ANA_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=265498497`;
+
+let arbitri=[],supervisori=[],analisi=[],merged=[];
+let sortCol=-1,sortDir=1;
+
+function parseCSV(text){
+const rows=[];let cur=[],field='',inQ=false;
+for(let i=0;i<text.length;i++){
+const c=text[i];
+if(inQ){if(c==='"'){if(text[i+1]==='"'){field+='"';i++}else inQ=false}else field+=c}
+else{if(c==='"')inQ=true;else if(c===','){cur.push(field.trim());field=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;cur.push(field.trim());if(cur.some(x=>x))rows.push(cur);cur=[];field=''}else field+=c}
+}
+cur.push(field.trim());if(cur.some(x=>x))rows.push(cur);
+return rows;
+}
+
+function parseDate(s){
+if(!s)return null;
+// try DD/MM/YYYY
+let m=s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+return new Date(s);
+}
+
+function fmtDate(d){if(!d||isNaN(d))return'-';return d.toLocaleDateString('it-IT')}
+function yearsDiff(d){if(!d||isNaN(d))return 0;return Math.floor((new Date()-d)/31557600000)}
+
+async function fetchCSV(url){
+const r=await fetch(PROXY+encodeURIComponent(url));
+if(!r.ok)throw new Error(r.status);
+return await r.text();
+}
+
+async function loadData(){
+const[orgText,anaText]=await Promise.all([fetchCSV(ORG_URL),fetchCSV(ANA_URL)]);
+const orgRows=parseCSV(orgText);
+// find header row (contains "Tipo Tecnico")
+let hIdx=orgRows.findIndex(r=>r[0]&&r[0].includes('Tipo Tecnico'));
+if(hIdx<0)hIdx=3;
+const hdr=orgRows[hIdx];
+const data=orgRows.slice(hIdx+1).filter(r=>r.length>=5&&r[0]);
+
+data.forEach(r=>{
+const obj={};
+hdr.forEach((h,i)=>obj[h]=r[i]||'');
+obj._dob=parseDate(obj['Data di nascita']);
+obj._eta=parseInt(obj['Età'])||0;
+obj._dtTess=parseDate(obj['Data tesseramento']);
+obj._dtPrimo=parseDate(obj['Data primo tesseramento']);
+obj._anz=yearsDiff(obj._dtPrimo);
+obj._nome=(obj['Nominativo']||'').trim();
+obj._tipo=(obj['Tipo Tecnico']||'').trim();
+obj._qualifica=(obj['Qualifica']||'').trim();
+obj._comitato=(obj['Comitato Territoriale']||'').trim();
+obj._stato=(obj['Stato tesseramento']||'').trim();
+if(obj._tipo.toLowerCase().includes('arbitro')&&!obj._tipo.toLowerCase().includes('supervis'))arbitri.push(obj);
+else if(obj._tipo.toLowerCase().includes('supervis'))supervisori.push(obj);
+});
+
+const anaRows=parseCSV(anaText);
+const aHdr=anaRows[0];
+anaRows.slice(1).filter(r=>r[0]).forEach(r=>{
+const o={};aHdr.forEach((h,i)=>o[h]=r[i]||'');
+o._nome=(o['Arbitro']||'').trim();
+o._years={};
+['2018','2019','2020','2021','2022','2023','2024','2025'].forEach(y=>o._years[y]=parseInt(o[y])||0);
+o._totale=parseInt(o['Totale'])||0;
+analisi.push(o);
+});
+
+// merge
+const anaMap=new Map();
+analisi.forEach(a=>anaMap.set(a._nome.toLowerCase(),a));
+const orgSet=new Set();
+
+arbitri.forEach(a=>{
+orgSet.add(a._nome.toLowerCase());
+const an=anaMap.get(a._nome.toLowerCase());
+merged.push({...a,_years:an?an._years:{},...(an?{_totale:an._totale}:{_totale:0}),_inOrganico:true,_inAnalisi:!!an});
+});
+
+analisi.forEach(a=>{
+if(!orgSet.has(a._nome.toLowerCase())){
+merged.push({_nome:a._nome,_eta:parseInt(a['Età'])||0,_comitato:a['Comitato']||'',_qualifica:'',_stato:'Non in organico',_anz:0,_years:a._years,_totale:a._totale,_inOrganico:false,_inAnalisi:true,_tipo:'Arbitro'});
+}
+});
+
+render();
+document.getElementById('spinner').style.display='none';
+document.getElementById('lastUpdate').textContent='Aggiornato: '+new Date().toLocaleString('it-IT');
+}
+
+function render(){
+renderKPI();renderCharts();renderAnalysis();renderArbitriTable();renderSupTable();setupFilters();
+}
+
+// KPI
+function renderKPI(){
+const grid=document.getElementById('kpiGrid');
+const etaMedia=arbitri.length?(arbitri.reduce((s,a)=>s+a._eta,0)/arbitri.length).toFixed(1):0;
+const anzMedia=arbitri.filter(a=>a._dtPrimo).length?(arbitri.filter(a=>a._dtPrimo).reduce((s,a)=>s+a._anz,0)/arbitri.filter(a=>a._dtPrimo).length).toFixed(1):0;
+const candidati=merged.filter(a=>a._totale>=10&&a._eta<30);
+const torneiTot=merged.reduce((s,a)=>s+a._totale,0);
+
+const kpis=[
+{val:arbitri.length,label:'Arbitri in Organico',click:()=>showListModal('Arbitri in Organico',arbitri.map(a=>a._nome))},
+{val:supervisori.length,label:'Supervisori Beach',click:()=>showListModal('Supervisori Beach',supervisori.map(a=>a._nome))},
+{val:candidati.length,label:'Candidati Promozione',click:()=>showListModal('Candidati Promozione (≥10 tornei & <30 anni)',candidati.map(a=>`${a._nome} — ${a._totale} tornei, ${a._eta} anni`))},
+{val:etaMedia,label:'Età Media'},
+{val:anzMedia,label:'Anzianità Media (anni)'},
+{val:torneiTot.toLocaleString('it'),label:'Tornei Totali'}
+];
+grid.innerHTML=kpis.map((k,i)=>`<div class="kpi" data-kpi="${i}"><div class="val">${k.val}</div><div class="label">${k.label}</div></div>`).join('');
+grid.querySelectorAll('.kpi').forEach((el,i)=>{if(kpis[i].click)el.onclick=kpis[i].click});
+}
+
+// Charts
+let charts={};
+function renderCharts(){
+Object.values(charts).forEach(c=>c.destroy());charts={};
+const defs={defaults:true};
+Chart.defaults.color='#94a3b8';Chart.defaults.borderColor='#334155';
+
+// Età
+const etaFasce=[{l:'<20',min:0,max:19},{l:'20-30',min:20,max:30},{l:'30-40',min:31,max:40},{l:'40-50',min:41,max:50},{l:'>50',min:51,max:200}];
+const etaData=etaFasce.map(f=>arbitri.filter(a=>a._eta>=f.min&&a._eta<=f.max).length);
+charts.eta=new Chart(document.getElementById('chartEta'),{type:'bar',data:{labels:etaFasce.map(f=>f.l),datasets:[{data:etaData,backgroundColor:['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7'],borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}},onClick:(e,el)=>{if(el.length){const f=etaFasce[el[0].index];showListModal(`Arbitri ${f.l} anni`,arbitri.filter(a=>a._eta>=f.min&&a._eta<=f.max).map(a=>`${a._nome} — ${a._eta} anni`))}}}});
+
+// Anzianità
+const anzFasce=[{l:'<2',min:0,max:1},{l:'2-5',min:2,max:5},{l:'5-10',min:6,max:10},{l:'10-20',min:11,max:20},{l:'>20',min:21,max:99}];
+const anzData=anzFasce.map(f=>arbitri.filter(a=>a._anz>=f.min&&a._anz<=f.max).length);
+charts.anz=new Chart(document.getElementById('chartAnz'),{type:'bar',data:{labels:anzFasce.map(f=>f.l+' anni'),datasets:[{data:anzData,backgroundColor:['#06b6d4','#8b5cf6','#f59e0b','#ec4899','#10b981'],borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}},onClick:(e,el)=>{if(el.length){const f=anzFasce[el[0].index];showListModal(`Arbitri anzianità ${f.l} anni`,arbitri.filter(a=>a._anz>=f.min&&a._anz<=f.max).map(a=>`${a._nome} — ${a._anz} anni`))}}}});
+
+// Comitato
+const comMap={};arbitri.forEach(a=>{const c=a._comitato||'N/D';comMap[c]=(comMap[c]||0)+1});
+const comLabels=Object.keys(comMap).sort((a,b)=>comMap[b]-comMap[a]);
+const comColors=comLabels.map((_,i)=>`hsl(${(i*360/comLabels.length)%360},60%,55%)`);
+charts.com=new Chart(document.getElementById('chartComitato'),{type:'doughnut',data:{labels:comLabels,datasets:[{data:comLabels.map(l=>comMap[l]),backgroundColor:comColors}]},options:{plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:10}}}}}});
+
+// Stagione
+const years=['2018','2019','2020','2021','2022','2023','2024','2025'];
+const yrTotals=years.map(y=>analisi.reduce((s,a)=>s+(a._years[y]||0),0));
+charts.stag=new Chart(document.getElementById('chartStagione'),{type:'line',data:{labels:years,datasets:[{label:'Tornei totali',data:yrTotals,borderColor:'var(--gold)',backgroundColor:'rgba(245,158,11,.15)',fill:true,tension:.3,pointRadius:5,pointBackgroundColor:'#f59e0b'}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+}
+
+// Analysis
+function renderAnalysis(){
+const grid=document.getElementById('analysisGrid');
+const inattivi=merged.filter(a=>a._inOrganico&&(a._years['2024']||0)===0&&(a._years['2025']||0)===0);
+const inCalo=merged.filter(a=>{
+if(!a._inAnalisi)return false;
+const prev=['2018','2019','2020','2021','2022','2023'].map(y=>a._years[y]||0).filter(v=>v>0);
+if(!prev.length)return false;
+const avg=prev.reduce((s,v)=>s+v,0)/prev.length;
+return(a._years['2024']||0)<avg;
+});
+const candidati=merged.filter(a=>a._totale>=10&&a._eta<30);
+const attesa=arbitri.filter(a=>a._stato.toLowerCase().includes('attesa'));
+const nuovi=arbitri.filter(a=>a._anz<2&&a._dtPrimo);
+const veterani=arbitri.filter(a=>a._anz>20);
+const qualMap={};arbitri.forEach(a=>{const q=a._qualifica||'N/D';qualMap[q]=(qualMap[q]||0)+1});
+
+const cards=[
+{icon:'🔴',label:'Arbitri inattivi',val:inattivi.length,cls:'red',list:inattivi.map(a=>a._nome)},
+{icon:'🟡',label:'Arbitri in calo',val:inCalo.length,cls:'yellow',list:inCalo.map(a=>`${a._nome} — 2024: ${a._years['2024']||0}`)},
+{icon:'🟢',label:'Candidati promozione',val:candidati.length,cls:'green',list:candidati.map(a=>`${a._nome} — ${a._totale} tornei, ${a._eta} anni`)},
+{icon:'⚠️',label:'In attesa di rinnovo',val:attesa.length,cls:'orange',list:attesa.map(a=>a._nome)},
+{icon:'🆕',label:'Arbitri nuovi (<2 anni)',val:nuovi.length,cls:'blue',list:nuovi.map(a=>`${a._nome} — ${fmtDate(a._dtPrimo)}`)},
+{icon:'🏆',label:'Veterani (>20 anni)',val:veterani.length,cls:'purple',list:veterani.map(a=>`${a._nome} — ${a._anz} anni`)},
+{icon:'📊',label:'Qualifiche',val:Object.keys(qualMap).length+' tipi',cls:'teal',custom:()=>showQualificheModal(qualMap)}
+];
+
+grid.innerHTML=cards.map((c,i)=>`<div class="analysis-card ${c.cls}" data-a="${i}"><div class="a-val">${c.icon} ${c.val}</div><div class="a-label">${c.label}</div></div>`).join('');
+grid.querySelectorAll('.analysis-card').forEach((el,i)=>{
+el.onclick=()=>{
+if(cards[i].custom)cards[i].custom();
+else showListModal(`${cards[i].icon} ${cards[i].label}`,cards[i].list);
+};
+});
+}
+
+function showQualificheModal(qMap){
+openModal('📊 Distribuzione Qualifiche',`<canvas id="qualDonut" style="max-height:300px"></canvas><ul class="modal-list">${Object.entries(qMap).map(([k,v])=>`<li><span class="badge badge-${k.toLowerCase().substring(0,2)}">${k}</span> — ${v} arbitri</li>`).join('')}</ul>`);
+setTimeout(()=>{
+const c=document.getElementById('qualDonut');if(!c)return;
+new Chart(c,{type:'doughnut',data:{labels:Object.keys(qMap),datasets:[{data:Object.values(qMap),backgroundColor:['#7c3aed','#3b82f6','#22c55e','#f59e0b','#ef4444']}]},options:{plugins:{legend:{position:'bottom'}}}});
+},100);
+}
+
+// Tables
+const arbCols=[{k:'_nome',l:'Nominativo'},{k:'_eta',l:'Età',n:1},{k:'_qualifica',l:'Qualifica'},{k:'_comitato',l:'Comitato'},{k:'_anz',l:'Anzianità',n:1},{k:'y2024',l:'2024',n:1},{k:'y2025',l:'2025',n:1},{k:'_totale',l:'Totale',n:1}];
+
+function renderArbitriTable(data){
+data=data||merged;
+const tbl=document.getElementById('arbitriTable');
+const thead=tbl.querySelector('thead tr');
+thead.innerHTML=arbCols.map((c,i)=>{
+let cls='';if(i===sortCol)cls=sortDir===1?'sorted-asc':'sorted-desc';
+return`<th class="${cls}" data-i="${i}">${c.l}</th>`;
+}).join('');
+thead.querySelectorAll('th').forEach(th=>{
+th.onclick=()=>{const i=+th.dataset.i;if(sortCol===i)sortDir*=-1;else{sortCol=i;sortDir=1}renderArbitriTable(applyFilters())}
+});
+
+const tbody=tbl.querySelector('tbody');
+tbody.innerHTML=data.map(a=>{
+const y24=a._years?a._years['2024']||0:0;
+const y25=a._years?a._years['2025']||0:0;
+const stato=a._inOrganico?'':'<span style="color:var(--red);font-size:.7rem"> [Non in organico]</span>';
+return`<tr data-nome="${a._nome}"><td>${a._nome}${stato}</td><td>${a._eta}</td><td><span class="badge badge-${(a._qualifica||'').toLowerCase().substring(0,2)}">${a._qualifica||'-'}</span></td><td>${a._comitato||'-'}</td><td>${a._anz||0}</td><td>${y24}</td><td>${y25}</td><td style="font-weight:700;color:var(--gold)">${a._totale||0}</td></tr>`;
+}).join('');
+
+if(sortCol>=0){
+const rows=[...tbody.querySelectorAll('tr')];
+const col=arbCols[sortCol];
+rows.sort((a,b)=>{
+const av=col.n?+(a.children[sortCol].textContent):a.children[sortCol].textContent.toLowerCase();
+const bv=col.n?+(b.children[sortCol].textContent):b.children[sortCol].textContent.toLowerCase();
+return(av<bv?-1:av>bv?1:0)*sortDir;
+});
+rows.forEach(r=>tbody.appendChild(r));
+}
+
+tbody.querySelectorAll('tr').forEach(tr=>{
+tr.onclick=()=>showProfile(tr.dataset.nome);
+});
+}
+
+function renderSupTable(){
+const tbody=document.getElementById('supTable').querySelector('tbody');
+tbody.innerHTML=supervisori.map(s=>`<tr><td>${s._nome}</td><td>${s._eta}</td><td>${s._qualifica||'-'}</td><td>${s._comitato||'-'}</td><td>${s._stato||'-'}</td><td>${s._anz||0} anni</td></tr>`).join('');
+}
+
+function setupFilters(){
+const sel=document.getElementById('filterComitato');
+const coms=[...new Set(arbitri.map(a=>a._comitato).filter(Boolean))].sort();
+sel.innerHTML='<option value="">Tutti i comitati</option>'+coms.map(c=>`<option>${c}</option>`).join('');
+
+const selS=document.getElementById('filterStato');
+const stats=[...new Set(arbitri.map(a=>a._stato).filter(Boolean))].sort();
+selS.innerHTML='<option value="">Tutti gli stati</option>'+stats.map(c=>`<option>${c}</option>`).join('');
+
+['searchName','filterComitato','filterStato','filterEta'].forEach(id=>{
+document.getElementById(id).addEventListener('input',()=>renderArbitriTable(applyFilters()));
+document.getElementById(id).addEventListener('change',()=>renderArbitriTable(applyFilters()));
+});
+}
+
+function applyFilters(){
+let d=[...merged];
+const q=document.getElementById('searchName').value.toLowerCase();
+const com=document.getElementById('filterComitato').value;
+const stato=document.getElementById('filterStato').value;
+const eta=document.getElementById('filterEta').value;
+if(q)d=d.filter(a=>a._nome.toLowerCase().includes(q));
+if(com)d=d.filter(a=>a._comitato===com);
+if(stato)d=d.filter(a=>a._stato===stato);
+if(eta){
+const ranges={'<20':[0,19],'20-30':[20,30],'30-40':[31,40],'40-50':[41,50],'>50':[51,200]};
+const[mn,mx]=ranges[eta]||[0,200];
+d=d.filter(a=>a._eta>=mn&&a._eta<=mx);
+}
+return d;
+}
+
+// Profile modal
+function showProfile(nome){
+const a=merged.find(x=>x._nome===nome);if(!a)return;
+const years=['2018','2019','2020','2021','2022','2023','2024','2025'];
+const vals=years.map(y=>(a._years&&a._years[y])||0);
+const info=`
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+<div><strong>Età:</strong> ${a._eta}</div>
+<div><strong>Qualifica:</strong> ${a._qualifica||'-'}</div>
+<div><strong>Comitato:</strong> ${a._comitato||'-'}</div>
+<div><strong>Anzianità:</strong> ${a._anz||0} anni</div>
+<div><strong>Stato:</strong> ${a._stato||'-'}</div>
+<div><strong>Totale tornei:</strong> <span style="color:var(--gold);font-weight:700">${a._totale||0}</span></div>
+${a._dtPrimo?`<div><strong>Primo tess.:</strong> ${fmtDate(a._dtPrimo)}</div>`:''}
+${!a._inOrganico?'<div style="color:var(--red)">⚠️ Non in organico</div>':''}
+</div>
+<canvas id="profileChart"></canvas>`;
+openModal(`👤 ${nome}`,info);
+setTimeout(()=>{
+const c=document.getElementById('profileChart');if(!c)return;
+new Chart(c,{type:'bar',data:{labels:years,datasets:[{data:vals,backgroundColor:'#f59e0b',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+},100);
+}
+
+// Modal
+function openModal(title,html){
+document.getElementById('modalTitle').textContent=title;
+document.getElementById('modalBody').innerHTML=html;
+document.getElementById('modalOverlay').classList.add('active');
+}
+function showListModal(title,items){
+openModal(title,items.length?`<ul class="modal-list">${items.map(i=>`<li>${i}</li>`).join('')}</ul>`:'<p style="color:var(--muted)">Nessun elemento</p>');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('active')}
+document.getElementById('modalClose').onclick=closeModal;
+document.getElementById('modalOverlay').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+loadData().catch(err=>{
+document.getElementById('spinner').innerHTML=`<div style="color:var(--red);text-align:center"><h2>Errore caricamento</h2><p>${err.message}</p><button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;cursor:pointer">Riprova</button></div>`;
+});
+</script>
+</body>
+</html>

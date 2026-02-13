@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Arbitri Beach Volley V10</title>
+<title>Dashboard Arbitri Beach Volley V7</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -57,7 +57,7 @@ td.saved{background:rgba(34,197,94,.15)!important;transition:background 1s}
 td.save-error{background:rgba(239,68,68,.15)!important}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;justify-content:center;align-items:center;animation:fadeIn .2s}
 .modal-overlay.active{display:flex}
-.modal{background:var(--card);border-radius:16px;padding:24px;max-width:800px;width:95%;max-height:85vh;overflow-y:auto;position:relative;border:1px solid var(--card2)}
+.modal{background:var(--card);border-radius:16px;padding:24px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto;position:relative;border:1px solid var(--card2)}
 .modal h2{color:var(--gold);margin-bottom:16px;font-size:1.2rem}
 .modal .close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer}
 .modal .close:hover{color:var(--text)}
@@ -68,29 +68,12 @@ td.save-error{background:rgba(239,68,68,.15)!important}
 .modal-list li:hover{background:var(--card2)}
 .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:600}
 .badge-pr{background:#7c3aed33;color:#a78bfa}.badge-re{background:#2563eb33;color:#60a5fa}.badge-na{background:#65a30d33;color:#a3e635}
-.badge-b1{background:#ef444433;color:#f87171}.badge-b2{background:#3b82f633;color:#60a5fa}
-.badge-u1{background:#a855f733;color:#c084fc}.badge-td{background:#14b8a633;color:#5eead4}
-.badge-st{background:#f59e0b33;color:#fbbf24}.badge-fi{background:#ec489933;color:#f472b6}
-.badge-promo{background:#22c55e33;color:#4ade80;padding:4px 12px;border-radius:8px;font-size:.75rem;font-weight:700}
 .spinner-overlay{display:flex;position:fixed;inset:0;background:var(--bg);z-index:2000;justify-content:center;align-items:center;flex-direction:column;gap:16px}
 .spinner{width:48px;height:48px;border:4px solid var(--card2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @media(max-width:768px){.charts-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
 .table-wrapper{overflow-x:auto;border-radius:12px;margin-bottom:24px}
-.profile-section{margin-bottom:16px}
-.profile-section h4{color:var(--gold);margin-bottom:8px;font-size:.9rem}
-.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-.profile-grid div{font-size:.85rem}
-.cat-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
-.cat-badge{padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600}
-.tornei-table{width:100%;font-size:.8rem;margin-bottom:16px}
-.tornei-table th{background:var(--card2);padding:6px 10px;text-align:left;color:var(--gold)}
-.tornei-table td{padding:6px 10px;border-bottom:1px solid var(--card2)}
-.season-summary{background:var(--card2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:.85rem;line-height:1.6;font-family:'Courier New',monospace}
-.season-summary .yr{color:var(--muted)}.season-summary .cnt{color:var(--gold);font-weight:700}
-.arb-link{color:var(--blue);cursor:pointer;text-decoration:none}
-.arb-link:hover{text-decoration:underline;color:#60a5fa}
 </style>
 </head>
 <body>
@@ -102,7 +85,7 @@ td.save-error{background:rgba(239,68,68,.15)!important}
 </div>
 
 <div class="header">
-<div><h1>🏐 Dashboard Arbitri Beach Volley</h1><div class="sub">Dati live da Google Sheets — V10 con popup completi, specializzazioni e distribuzione tornei</div></div>
+<div><h1>🏐 Dashboard Arbitri Beach Volley</h1><div class="sub">Dati live da Google Sheets — V7 con editing bidirezionale</div></div>
 <div class="sub" id="lastUpdate"></div>
 </div>
 
@@ -119,7 +102,7 @@ td.save-error{background:rgba(239,68,68,.15)!important}
 <div class="section-title">⚡ Analisi Critica</div>
 <div class="analysis-grid" id="analysisGrid"></div>
 
-<div class="section-title">👨‍⚖️ Tabella Arbitri <span style="font-size:.75rem;color:var(--muted)">(clicca sul nome per il profilo, su una cella ✏️ per modificarla)</span></div>
+<div class="section-title">👨‍⚖️ Tabella Arbitri <span style="font-size:.75rem;color:var(--muted)">(clicca su una cella per modificarla)</span></div>
 <div class="filters" id="arbitriFilters">
 <input type="text" id="searchName" placeholder="🔍 Cerca nominativo...">
 <select id="filterComitato"><option value="">Tutti i comitati</option></select>
@@ -138,29 +121,23 @@ td.save-error{background:rgba(239,68,68,.15)!important}
 <div class="modal-overlay" id="modalOverlay"><div class="modal" id="modal"><button class="close" id="modalClose">&times;</button><h2 id="modalTitle"></h2><div id="modalBody"></div></div></div>
 
 <script>
+// ============================================
+// CONFIGURAZIONE: Inserisci qui l'URL del Web App
+// ============================================
 const API_URL = 'https://script.google.com/macros/s/AKfycbwMJgjVtb4A9bzQf9-Y3ko-UZnl-DanzfyXFCoTZtjQIJOBU3e2CQ1AED6A5kK028E8/exec';
+// ============================================
 
+// Fallback CSV (se API_URL non configurato)
 const PROXY='https://corsproxy.io/?url=';
 const SHEET_ID='11yFEnHfKU2mu8ym5JqBn11Wu1PQYV1Xj8nYfy576Zoo';
 const ORG_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1005819633`;
 const ANA_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=265498497`;
-const DES_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=21948265`;
-
-// 3 fogli segnapunti (estate 2025)
-const SEGNA_URLS = [
-  'https://docs.google.com/spreadsheets/d/1wWqcc8Qa6DRGCG767ZbRViTjYm5cwkrIih6hAMdYTuA/export?format=csv&gid=0',
-  'https://docs.google.com/spreadsheets/d/1X3wbqD5cUeWyNCtJ-NBghM2A2XuSYgV1F6SHsf0mP9I/export?format=csv&gid=0',
-  'https://docs.google.com/spreadsheets/d/1xdXXqzK3pbaHAJOPxLT7ME9BWr-dRlYAGhnBYMYVJ00/export?format=csv&gid=0'
-];
 
 const useAPI = API_URL && !API_URL.includes('INSERISCI');
 
 let arbitri=[],supervisori=[],analisi=[],merged=[],mergedOrganico=[],mergedNonOrganico=[];
 let orgHeaders=[], anaHeaders=[];
 let sortCol=-1,sortDir=1;
-let desData = { tornei: [], arbitriMap: new Map() };
-// Segnapunti data: Map<"COGNOME NOME" lowercase, count of unique tornei>
-let segnapuntiMap = new Map();
 
 function parseCSV(text){
 const rows=[];let cur=[],field='',inQ=false;
@@ -190,172 +167,62 @@ return await r.text();
 }
 
 async function saveCell(tab, row, col, value) {
-  if (!useAPI) { alert('API non configurata.'); return false; }
+  if (!useAPI) { alert('API non configurata. Inserisci l\'URL del Web App.'); return false; }
   try {
-    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ tab, row, col, value }), mode: 'no-cors' });
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tab: tab, row: row, col: col, value: value }),
+      mode: 'no-cors'
+    });
+    // no-cors returns opaque response, so we assume success
+    // If CORS is properly configured in Apps Script, use mode:'cors' instead
     return true;
-  } catch (err) { console.error('Save error:', err); return false; }
+  } catch (err) {
+    console.error('Save error:', err);
+    return false;
+  }
 }
 
+// Proper CORS save (Apps Script supports CORS for deployed web apps)
 async function saveCellCORS(tab, row, col, value) {
   if (!useAPI) { alert('API non configurata.'); return false; }
   try {
-    const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ tab, row, col, value }), redirect: 'follow' });
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ tab: tab, row: row, col: col, value: value }),
+      redirect: 'follow'
+    });
     const j = await r.json();
     return j.success;
   } catch (err) {
-    try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ tab, row, col, value }), mode: 'no-cors' }); return true; }
-    catch (e2) { console.error('Save error:', e2); return false; }
+    // Fallback: try with no-cors
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ tab: tab, row: row, col: col, value: value }),
+        mode: 'no-cors'
+      });
+      return true; // assume success
+    } catch (e2) {
+      console.error('Save error:', e2);
+      return false;
+    }
   }
-}
-
-// Helper: make a name clickable
-function arbLink(nome) {
-  return `<span class="arb-link" onclick="showProfile('${nome.replace(/'/g,"\\'")}')">${nome}</span>`;
 }
 
 async function loadData(){
-  try {
-    if (useAPI) { await loadFromAPI(); } else { await loadFromCSV(); }
-  } catch(e) {
-    console.error('Primary load failed, trying CSV fallback:', e);
+  if (useAPI) {
+    await loadFromAPI();
+  } else {
     await loadFromCSV();
   }
-  await Promise.all([loadDesignazioni(), loadSegnapunti()]);
   render();
   document.getElementById('spinner').style.display='none';
   document.getElementById('lastUpdate').textContent='Aggiornato: '+new Date().toLocaleString('it-IT');
   if (!useAPI) {
-    document.getElementById('syncBanner').innerHTML='<span style="color:#fcd34d">⚠️ Modalità sola lettura (CSV). Configura API per editing.</span>';
+    document.getElementById('syncBanner').innerHTML='<span style="color:#fcd34d">⚠️ API non configurata — modalità sola lettura (CSV). Configura API_URL per abilitare editing.</span>';
     document.getElementById('syncBanner').style.background='linear-gradient(90deg,#78350f,#92400e)';
-  }
-}
-
-async function loadSegnapunti() {
-  try {
-    const texts = await Promise.all(SEGNA_URLS.map(u => fetchCSV(u).catch(() => '')));
-    const allRows = [];
-    texts.forEach(text => {
-      if (!text) return;
-      const rows = parseCSV(text);
-      if (rows.length < 2) return;
-      const hdr = rows[0];
-      // Find column indices
-      const iCognome = hdr.findIndex(h => h.toLowerCase().includes('arbitrocognome'));
-      const iNome = hdr.findIndex(h => h.toLowerCase().includes('arbitronome'));
-      const iFunzione = hdr.findIndex(h => h.toLowerCase().includes('funzionedesignazione'));
-      const iStato = hdr.findIndex(h => h.toLowerCase().includes('statodesignazione'));
-      const iGara = hdr.findIndex(h => h.toLowerCase().includes('garadescrizione'));
-      const iImpianto = hdr.findIndex(h => h.toLowerCase().includes('impiantonome'));
-      if (iCognome < 0 || iNome < 0 || iFunzione < 0) return;
-      for (let r = 1; r < rows.length; r++) {
-        const row = rows[r];
-        const funzione = (row[iFunzione] || '').trim();
-        const stato = (row[iStato] || '').trim().toLowerCase();
-        if (funzione.toLowerCase() === 'segnapunti' && stato.includes('accettata')) {
-          const cognome = (row[iCognome] || '').trim();
-          const nome = (row[iNome] || '').trim();
-          const gara = (row[iGara] || '').trim();
-          const impianto = iImpianto >= 0 ? (row[iImpianto] || '').trim() : '';
-          allRows.push({ cognome, nome, torneoKey: gara + '|' + impianto });
-        }
-      }
-    });
-    // Group by arbitro, count unique tornei
-    const arbTornei = new Map();
-    allRows.forEach(r => {
-      const key = (r.cognome + ' ' + r.nome).toLowerCase();
-      if (!arbTornei.has(key)) arbTornei.set(key, new Set());
-      arbTornei.get(key).add(r.torneoKey);
-    });
-    arbTornei.forEach((torneiSet, key) => {
-      segnapuntiMap.set(key, torneiSet.size);
-    });
-    console.log('Segnapunti loaded:', segnapuntiMap.size, 'arbitri');
-  } catch(e) {
-    console.error('Failed to load segnapunti:', e);
-  }
-}
-
-function getSegnapuntiCount(nome) {
-  // Try exact match on lowercase full name
-  const key = nome.toLowerCase();
-  if (segnapuntiMap.has(key)) return segnapuntiMap.get(key);
-  // Try reversed (Nome Cognome -> Cognome Nome)
-  const parts = nome.split(/\s+/);
-  if (parts.length >= 2) {
-    // Try "cognome nome" format matching
-    for (const [k, v] of segnapuntiMap) {
-      // Fuzzy: check if both parts appear in key
-      const kParts = k.split(/\s+/);
-      if (kParts.length >= 2) {
-        const p0 = parts[0].toLowerCase(), p1 = parts.slice(1).join(' ').toLowerCase();
-        const k0 = kParts[0], k1 = kParts.slice(1).join(' ');
-        if ((p0 === k0 && p1 === k1) || (p0 === k1 && p1 === k0)) return v;
-      }
-    }
-  }
-  return 0;
-}
-
-async function loadDesignazioni() {
-  try {
-    if (useAPI && !desData.tornei.length) {
-      try {
-        const r = await fetch(API_URL);
-        const data = await r.json();
-        if (data.success && data.designazioni) {
-          processDesignazioniAPI(data.designazioni);
-          return;
-        }
-      } catch(e) { console.log('API designazioni not available, using CSV fallback'); }
-    }
-    if (!desData.tornei.length) {
-      const text = await fetchCSV(DES_URL);
-      processDesignazioniCSV(text);
-    }
-  } catch(e) {
-    console.error('Failed to load designazioni:', e);
-  }
-}
-
-function processDesignazioniAPI(des) {
-  desData.tornei = des.tornei;
-  desData.arbitriMap = new Map();
-  des.arbitri.forEach(a => {
-    const torneiArb = a.designati.map(ci => {
-      const t = des.tornei.find(t => t.colIndex === ci);
-      return t ? { tipo: t.tipo, data: t.data, luogo: t.luogo } : null;
-    }).filter(Boolean);
-    desData.arbitriMap.set(a.cognome.toLowerCase(), torneiArb);
-  });
-}
-
-function processDesignazioniCSV(text) {
-  const rows = parseCSV(text);
-  if (rows.length < 4) return;
-  const tipi = rows[0];
-  const date = rows[1];
-  const luoghi = rows[2];
-  const numCols = tipi.length;
-  
-  const tornei = [];
-  for (let c = 1; c < numCols; c++) {
-    tornei.push({ tipo: (tipi[c]||'').trim(), data: (date[c]||'').trim(), luogo: (luoghi[c]||'').trim() });
-  }
-  desData.tornei = tornei;
-  desData.arbitriMap = new Map();
-  
-  for (let r = 3; r < rows.length; r++) {
-    const cognome = (rows[r][0]||'').trim();
-    if (!cognome) continue;
-    const torneiArb = [];
-    for (let c = 1; c < numCols; c++) {
-      if ((rows[r][c]||'').trim().toLowerCase() === 'x') {
-        torneiArb.push(tornei[c-1]);
-      }
-    }
-    desData.arbitriMap.set(cognome.toLowerCase(), torneiArb);
   }
 }
 
@@ -363,9 +230,9 @@ async function loadFromAPI() {
   const r = await fetch(API_URL);
   const data = await r.json();
   if (!data.success) throw new Error(data.error || 'API error');
+  
   processOrganicoRows(data.organico);
   processAnalisiRows(data.analisi);
-  if (data.designazioni) processDesignazioniAPI(data.designazioni);
   mergeData();
 }
 
@@ -377,13 +244,17 @@ async function loadFromCSV() {
   const hdr=orgRows[hIdx];
   orgHeaders=hdr;
   const data=orgRows.slice(hIdx+1).filter(r=>r.length>=5&&r[0]);
+
   data.forEach((r,ri)=>{
-    const obj={};hdr.forEach((h,i)=>obj[h]=r[i]||'');
-    obj._rowIndex = hIdx + 2 + ri;
+    const obj={};
+    hdr.forEach((h,i)=>obj[h]=r[i]||'');
+    obj._rowIndex = hIdx + 2 + ri; // 1-indexed sheet row
     processOrgObj(obj);
   });
+
   const anaRows=parseCSV(anaText);
-  const aHdr=anaRows[0];anaHeaders=aHdr;
+  const aHdr=anaRows[0];
+  anaHeaders=aHdr;
   anaRows.slice(1).filter(r=>r[0]).forEach((r,ri)=>{
     const o={};aHdr.forEach((h,i)=>o[h]=r[i]||'');
     o._rowIndex = 2 + ri;
@@ -393,10 +264,15 @@ async function loadFromCSV() {
     o._totale=parseInt(o['Totale'])||0;
     analisi.push(o);
   });
+
   mergeData();
 }
 
-function processOrganicoRows(rows) { rows.forEach(obj => processOrgObj(obj)); }
+function processOrganicoRows(rows) {
+  rows.forEach(obj => {
+    processOrgObj(obj);
+  });
+}
 
 function processOrgObj(obj) {
   obj._dob=parseDate(obj['Data di nascita']);
@@ -427,25 +303,21 @@ function mergeData() {
   const anaMap=new Map();
   analisi.forEach(a=>anaMap.set(a._nome.toLowerCase(),a));
   const orgSet=new Set();
+
   arbitri.forEach(a=>{
     orgSet.add(a._nome.toLowerCase());
     const an=anaMap.get(a._nome.toLowerCase());
     merged.push({...a,_years:an?an._years:{},...(an?{_totale:an._totale}:{_totale:0}),_inOrganico:true,_inAnalisi:!!an,_anaRowIndex:an?an._rowIndex:null});
   });
+
   analisi.forEach(a=>{
     if(!orgSet.has(a._nome.toLowerCase())){
       merged.push({_nome:a._nome,_eta:parseInt(a['Età'])||0,_comitato:a['Comitato']||'',_qualifica:'',_stato:'Non in organico',_anz:0,_years:a._years,_totale:a._totale,_inOrganico:false,_inAnalisi:true,_tipo:'Arbitro',_rowIndex:a._rowIndex,_anaRowIndex:a._rowIndex});
     }
   });
+
   mergedOrganico=merged.filter(a=>a._inOrganico);
   mergedNonOrganico=merged.filter(a=>!a._inOrganico);
-}
-
-// V9: Updated candidati promozione logic
-function isCandidatoPromozione(a) {
-  const y24 = (a._years && a._years['2024']) || 0;
-  const y25 = (a._years && a._years['2025']) || 0;
-  return a._totale >= 10 && a._eta < 30 && (y24 > 0 || y25 > 0);
 }
 
 function render(){
@@ -456,18 +328,16 @@ function renderKPI(){
 const grid=document.getElementById('kpiGrid');
 const etaMedia=arbitri.length?(arbitri.reduce((s,a)=>s+a._eta,0)/arbitri.length).toFixed(1):0;
 const anzMedia=arbitri.filter(a=>a._dtPrimo).length?(arbitri.filter(a=>a._dtPrimo).reduce((s,a)=>s+a._anz,0)/arbitri.filter(a=>a._dtPrimo).length).toFixed(1):0;
-const candidati=mergedOrganico.filter(isCandidatoPromozione);
+const candidati=mergedOrganico.filter(a=>a._totale>=10&&a._eta<30);
 const torneiTot=mergedOrganico.reduce((s,a)=>s+a._totale,0);
-const desCount = desData.tornei.length;
 
 const kpis=[
-{val:arbitri.length,label:'Arbitri in Organico',click:()=>showListModal('Arbitri in Organico',arbitri.map(a=>arbLink(a._nome)))},
+{val:arbitri.length,label:'Arbitri in Organico',click:()=>showListModal('Arbitri in Organico',arbitri.map(a=>a._nome))},
 {val:supervisori.length,label:'Supervisori Beach',click:()=>showListModal('Supervisori Beach',supervisori.map(a=>a._nome))},
-{val:candidati.length,label:'Candidati Promozione',click:()=>showListModal('Candidati Promozione (≥10 tornei & <30 anni & attivo 2024/25)',candidati.map(a=>`${arbLink(a._nome)} — ${a._totale} tornei, ${a._eta} anni`))},
+{val:candidati.length,label:'Candidati Promozione',click:()=>showListModal('Candidati Promozione (≥10 tornei & <30 anni)',candidati.map(a=>`${a._nome} — ${a._totale} tornei, ${a._eta} anni`))},
 {val:etaMedia,label:'Età Media'},
 {val:anzMedia,label:'Anzianità Media (anni)'},
-{val:torneiTot.toLocaleString('it'),label:'Tornei Totali'},
-{val:desCount,label:'Tornei in Designazioni'}
+{val:torneiTot.toLocaleString('it'),label:'Tornei Totali'}
 ];
 grid.innerHTML=kpis.map((k,i)=>`<div class="kpi" data-kpi="${i}"><div class="val">${k.val}</div><div class="label">${k.label}</div></div>`).join('');
 grid.querySelectorAll('.kpi').forEach((el,i)=>{if(kpis[i].click)el.onclick=kpis[i].click});
@@ -480,11 +350,11 @@ Chart.defaults.color='#94a3b8';Chart.defaults.borderColor='#334155';
 
 const etaFasce=[{l:'<20',min:0,max:19},{l:'20-30',min:20,max:30},{l:'30-40',min:31,max:40},{l:'40-50',min:41,max:50},{l:'>50',min:51,max:200}];
 const etaData=etaFasce.map(f=>arbitri.filter(a=>a._eta>=f.min&&a._eta<=f.max).length);
-charts.eta=new Chart(document.getElementById('chartEta'),{type:'bar',data:{labels:etaFasce.map(f=>f.l),datasets:[{data:etaData,backgroundColor:['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7'],borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}},onClick:(e,el)=>{if(el.length){const f=etaFasce[el[0].index];showListModal(`Arbitri ${f.l} anni`,arbitri.filter(a=>a._eta>=f.min&&a._eta<=f.max).map(a=>`${arbLink(a._nome)} — ${a._eta} anni`))}}}});
+charts.eta=new Chart(document.getElementById('chartEta'),{type:'bar',data:{labels:etaFasce.map(f=>f.l),datasets:[{data:etaData,backgroundColor:['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7'],borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}},onClick:(e,el)=>{if(el.length){const f=etaFasce[el[0].index];showListModal(`Arbitri ${f.l} anni`,arbitri.filter(a=>a._eta>=f.min&&a._eta<=f.max).map(a=>`${a._nome} — ${a._eta} anni`))}}}});
 
 const anzFasce=[{l:'<2',min:0,max:1},{l:'2-5',min:2,max:5},{l:'5-10',min:6,max:10},{l:'10-20',min:11,max:20},{l:'>20',min:21,max:99}];
 const anzData=anzFasce.map(f=>arbitri.filter(a=>a._anz>=f.min&&a._anz<=f.max).length);
-charts.anz=new Chart(document.getElementById('chartAnz'),{type:'bar',data:{labels:anzFasce.map(f=>f.l+' anni'),datasets:[{data:anzData,backgroundColor:['#06b6d4','#8b5cf6','#f59e0b','#ec4899','#10b981'],borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}},onClick:(e,el)=>{if(el.length){const f=anzFasce[el[0].index];showListModal(`Arbitri anzianità ${f.l} anni`,arbitri.filter(a=>a._anz>=f.min&&a._anz<=f.max).map(a=>`${arbLink(a._nome)} — ${a._anz} anni`))}}}});
+charts.anz=new Chart(document.getElementById('chartAnz'),{type:'bar',data:{labels:anzFasce.map(f=>f.l+' anni'),datasets:[{data:anzData,backgroundColor:['#06b6d4','#8b5cf6','#f59e0b','#ec4899','#10b981'],borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}},onClick:(e,el)=>{if(el.length){const f=anzFasce[el[0].index];showListModal(`Arbitri anzianità ${f.l} anni`,arbitri.filter(a=>a._anz>=f.min&&a._anz<=f.max).map(a=>`${a._nome} — ${a._anz} anni`))}}}});
 
 const comMap={};arbitri.forEach(a=>{const c=a._comitato||'N/D';comMap[c]=(comMap[c]||0)+1});
 const comLabels=Object.keys(comMap).sort((a,b)=>comMap[b]-comMap[a]);
@@ -506,44 +376,29 @@ if(!prev.length)return false;
 const avg=prev.reduce((s,v)=>s+v,0)/prev.length;
 return(a._years['2024']||0)<avg;
 });
-const candidati=mergedOrganico.filter(isCandidatoPromozione);
+const candidati=mergedOrganico.filter(a=>a._totale>=10&&a._eta<30);
 const attesa=arbitri.filter(a=>a._stato.toLowerCase().includes('attesa'));
 const nuovi=arbitri.filter(a=>a._anz<2&&a._dtPrimo);
 const veterani=arbitri.filter(a=>a._anz>20);
 const qualMap={};arbitri.forEach(a=>{const q=a._qualifica||'N/D';qualMap[q]=(qualMap[q]||0)+1});
 
 const cards=[
-{icon:'🔴',label:'Arbitri inattivi',val:inattivi.length,cls:'red',list:inattivi.map(a=>arbLink(a._nome))},
-{icon:'🟡',label:'Arbitri in calo',val:inCalo.length,cls:'yellow',list:inCalo.map(a=>`${arbLink(a._nome)} — 2024: ${a._years['2024']||0}`)},
-{icon:'🟢',label:'Candidati promozione',val:candidati.length,cls:'green',list:candidati.map(a=>`${arbLink(a._nome)} — ${a._totale} tornei, ${a._eta} anni`)},
-{icon:'⚠️',label:'In attesa di rinnovo',val:attesa.length,cls:'orange',list:attesa.map(a=>arbLink(a._nome))},
-{icon:'🆕',label:'Arbitri nuovi (<2 anni)',val:nuovi.length,cls:'blue',list:nuovi.map(a=>`${arbLink(a._nome)} — ${fmtDate(a._dtPrimo)}`)},
-{icon:'🏆',label:'Veterani (>20 anni)',val:veterani.length,cls:'purple',list:veterani.map(a=>`${arbLink(a._nome)} — ${a._anz} anni`)},
-{icon:'📊',label:'Qualifiche',val:Object.keys(qualMap).length+' tipi',cls:'teal',custom:()=>showQualificheModal(qualMap)},
-{icon:'🏐',label:'Distribuzione Tornei per Tipo',val:Object.keys(getGlobalTorneoDistribution()).length+' tipi',cls:'blue',custom:()=>showTorneoDistModal()}
+{icon:'🔴',label:'Arbitri inattivi',val:inattivi.length,cls:'red',list:inattivi.map(a=>a._nome)},
+{icon:'🟡',label:'Arbitri in calo',val:inCalo.length,cls:'yellow',list:inCalo.map(a=>`${a._nome} — 2024: ${a._years['2024']||0}`)},
+{icon:'🟢',label:'Candidati promozione',val:candidati.length,cls:'green',list:candidati.map(a=>`${a._nome} — ${a._totale} tornei, ${a._eta} anni`)},
+{icon:'⚠️',label:'In attesa di rinnovo',val:attesa.length,cls:'orange',list:attesa.map(a=>a._nome)},
+{icon:'🆕',label:'Arbitri nuovi (<2 anni)',val:nuovi.length,cls:'blue',list:nuovi.map(a=>`${a._nome} — ${fmtDate(a._dtPrimo)}`)},
+{icon:'🏆',label:'Veterani (>20 anni)',val:veterani.length,cls:'purple',list:veterani.map(a=>`${a._nome} — ${a._anz} anni`)},
+{icon:'📊',label:'Qualifiche',val:Object.keys(qualMap).length+' tipi',cls:'teal',custom:()=>showQualificheModal(qualMap)}
 ];
 
 grid.innerHTML=cards.map((c,i)=>`<div class="analysis-card ${c.cls}" data-a="${i}"><div class="a-val">${c.icon} ${c.val}</div><div class="a-label">${c.label}</div></div>`).join('');
 grid.querySelectorAll('.analysis-card').forEach((el,i)=>{
-el.onclick=()=>{if(cards[i].custom)cards[i].custom();else showListModal(`${cards[i].icon} ${cards[i].label}`,cards[i].list)};
+el.onclick=()=>{
+if(cards[i].custom)cards[i].custom();
+else showListModal(`${cards[i].icon} ${cards[i].label}`,cards[i].list);
+};
 });
-}
-
-function showTorneoDistModal(){
-const dist = getGlobalTorneoDistribution();
-const sorted = Object.entries(dist).sort((a,b) => b[1] - a[1]);
-const total = sorted.reduce((s,[,v]) => s + v, 0);
-openModal('🏐 Distribuzione Tornei per Tipo',
-  `<canvas id="torneoDistChart" style="max-height:300px"></canvas>
-  <ul class="modal-list">${sorted.map(([tipo, count]) => {
-    const pct = total ? ((count/total)*100).toFixed(1) : 0;
-    return `<li><span class="badge ${getCatBadgeClass(tipo)}" style="background:${getCatBgColor(tipo)}">${tipo}</span> — <strong>${count}</strong> tornei (${pct}%)</li>`;
-  }).join('')}</ul>`);
-setTimeout(()=>{
-const c=document.getElementById('torneoDistChart');if(!c)return;
-const colors=sorted.map(([tipo])=>{const t=tipo.toLowerCase();if(t.startsWith('b1'))return'#ef4444';if(t.startsWith('b2'))return'#3b82f6';if(t.includes('u1')||t.includes('u2'))return'#a855f7';if(t.includes('tdt'))return'#14b8a6';if(t.includes('student'))return'#f59e0b';return'#64748b'});
-new Chart(c,{type:'doughnut',data:{labels:sorted.map(([t])=>t),datasets:[{data:sorted.map(([,v])=>v),backgroundColor:colors}]},options:{plugins:{legend:{position:'bottom'}}}});
-},100);
 }
 
 function showQualificheModal(qMap){
@@ -554,6 +409,8 @@ new Chart(c,{type:'doughnut',data:{labels:Object.keys(qMap),datasets:[{data:Obje
 },100);
 }
 
+// Editable columns config: column index in arbCols → { sheetTab, headerName }
+// Columns 0 (_nome) is NOT editable. Others are editable.
 const arbCols=[
   {k:'_nome',l:'Nominativo',editable:false},
   {k:'_eta',l:'Età',n:1,editable:false},
@@ -562,9 +419,7 @@ const arbCols=[
   {k:'_anz',l:'Anzianità',n:1,editable:false},
   {k:'y2024',l:'2024',n:1,editable:true,tab:'Analisi stagioni',header:'2024'},
   {k:'y2025',l:'2025',n:1,editable:true,tab:'Analisi stagioni',header:'2025'},
-  {k:'_totale',l:'Totale',n:1,editable:false},
-  {k:'_spec',l:'Specializzazione',editable:false},
-  {k:'_desTot',l:'Designazioni',n:1,editable:false}
+  {k:'_totale',l:'Totale',n:1,editable:false}
 ];
 
 function renderArbitriTable(data){
@@ -583,13 +438,7 @@ const tbody=tbl.querySelector('tbody');
 tbody.innerHTML=data.map(a=>{
 const y24=a._years?a._years['2024']||0:0;
 const y25=a._years?a._years['2025']||0:0;
-const seg25 = getSegnapuntiCount(a._nome);
-const desList = getDesignazioniForArbitro(a._nome);
-const desTot = desList.length;
-const y24display = '' + y24;
-const y25display = seg25 > 0 ? `${y25} <span style="color:var(--muted);font-size:.75rem">(${seg25} seg)</span>` : '' + y25;
-const specHtml = getSpecializzazione(a._nome);
-return`<tr data-nome="${a._nome}"><td>${arbLink(a._nome)}</td><td>${a._eta}</td><td class="${arbCols[2].editable&&useAPI?'editable':''}" data-col="2"><span class="badge badge-${(a._qualifica||'').toLowerCase().substring(0,2)}">${a._qualifica||'-'}</span></td><td class="${arbCols[3].editable&&useAPI?'editable':''}" data-col="3">${a._comitato||'-'}</td><td>${a._anz||0}</td><td class="${arbCols[5].editable&&useAPI?'editable':''}" data-col="5">${y24display}</td><td class="${arbCols[6].editable&&useAPI?'editable':''}" data-col="6">${y25display}</td><td style="font-weight:700;color:var(--gold)">${a._totale||0}</td><td>${specHtml}</td><td>${desTot}</td></tr>`;
+return`<tr data-nome="${a._nome}"><td>${a._nome}</td><td>${a._eta}</td><td class="${arbCols[2].editable&&useAPI?'editable':''}" data-col="2"><span class="badge badge-${(a._qualifica||'').toLowerCase().substring(0,2)}">${a._qualifica||'-'}</span></td><td class="${arbCols[3].editable&&useAPI?'editable':''}" data-col="3">${a._comitato||'-'}</td><td>${a._anz||0}</td><td class="${arbCols[5].editable&&useAPI?'editable':''}" data-col="5">${y24}</td><td class="${arbCols[6].editable&&useAPI?'editable':''}" data-col="6">${y25}</td><td style="font-weight:700;color:var(--gold)">${a._totale||0}</td></tr>`;
 }).join('');
 
 if(sortCol>=0){
@@ -603,29 +452,20 @@ return(av<bv?-1:av>bv?1:0)*sortDir;
 rows.forEach(r=>tbody.appendChild(r));
 }
 
-tbody.querySelectorAll('td.editable').forEach(td=>{
-  td.onclick=(e)=>{e.stopPropagation();startEdit(td, td.closest('tr').dataset.nome)};
+// Attach edit + profile handlers
+tbody.querySelectorAll('tr').forEach(tr=>{
+  // Profile on name click
+  tr.children[0].onclick=(e)=>{e.stopPropagation();showProfile(tr.dataset.nome)};
+  tr.children[0].style.cursor='pointer';
+  
+  // Editable cells
+  tr.querySelectorAll('td.editable').forEach(td=>{
+    td.onclick=(e)=>{
+      e.stopPropagation();
+      startEdit(td, tr.dataset.nome);
+    };
+  });
 });
-}
-
-function getDesignazioniForArbitro(nome) {
-  const cognome = nome.split(' ')[0].toLowerCase();
-  return desData.arbitriMap.get(cognome) || desData.arbitriMap.get(nome.toLowerCase()) || [];
-}
-
-function getSpecializzazione(nome) {
-  const desList = getDesignazioniForArbitro(nome);
-  if (!desList.length) return '-';
-  const catCount = {};
-  desList.forEach(t => { const tipo = (t.tipo || 'N/D').trim(); catCount[tipo] = (catCount[tipo] || 0) + 1; });
-  return Object.entries(catCount).sort((a,b) => b[1] - a[1]).slice(0, 3)
-    .map(([tipo, count]) => `<span class="badge ${getCatBadgeClass(tipo)}" style="font-size:.65rem">${tipo} (${count})</span>`).join(' ');
-}
-
-function getGlobalTorneoDistribution() {
-  const catCount = {};
-  desData.tornei.forEach(t => { const tipo = (t.tipo || 'N/D').trim(); if (tipo) catCount[tipo] = (catCount[tipo] || 0) + 1; });
-  return catCount;
 }
 
 function startEdit(td, nome) {
@@ -634,37 +474,67 @@ function startEdit(td, nome) {
   const colDef = arbCols[colIdx];
   const currentText = td.textContent.trim();
   const currentVal = currentText === '-' ? '' : currentText;
+  
   td.classList.add('editing');
   const input = document.createElement('input');
-  input.type = 'text'; input.value = currentVal;
-  td.innerHTML = ''; td.appendChild(input);
-  input.focus(); input.select();
+  input.type = 'text';
+  input.value = currentVal;
+  td.innerHTML = '';
+  td.appendChild(input);
+  input.focus();
+  input.select();
+  
   const finish = async () => {
     const newVal = input.value.trim();
-    td.classList.remove('editing'); td.classList.add('saving');
+    td.classList.remove('editing');
+    td.classList.add('saving');
     td.textContent = newVal || '-';
+    
+    // Find the arbitro to get row index
     const arb = merged.find(a => a._nome === nome);
     if (!arb) { td.classList.remove('saving'); return; }
+    
+    // Determine sheet row and col
     let sheetRow, sheetCol;
     if (colDef.tab === 'Organico') {
       sheetRow = arb._rowIndex;
+      // Find column index by header name
       const headers = Object.keys(arb).filter(k => !k.startsWith('_'));
       sheetCol = headers.indexOf(colDef.header) + 1;
-      if (sheetCol <= 0 && orgHeaders.length) sheetCol = orgHeaders.indexOf(colDef.header) + 1;
+      // Fallback: use known headers from orgHeaders if available
+      if (sheetCol <= 0 && orgHeaders.length) {
+        sheetCol = orgHeaders.indexOf(colDef.header) + 1;
+      }
     } else {
+      // Analisi tab
       sheetRow = arb._anaRowIndex;
-      sheetCol = anaHeaders.length ? anaHeaders.indexOf(colDef.header) + 1 : null;
+      sheetCol = null;
+      // Try to find column from analisi headers
+      if (anaHeaders.length) {
+        sheetCol = anaHeaders.indexOf(colDef.header) + 1;
+      }
     }
+    
     if (!sheetRow || !sheetCol) {
-      td.classList.remove('saving'); td.classList.add('save-error');
-      setTimeout(() => td.classList.remove('save-error'), 2000); return;
+      td.classList.remove('saving');
+      td.classList.add('save-error');
+      setTimeout(() => td.classList.remove('save-error'), 2000);
+      console.error('Cannot find row/col for', nome, colDef);
+      return;
     }
+    
     const ok = await saveCellCORS(colDef.tab, sheetRow, sheetCol, newVal);
     td.classList.remove('saving');
-    if (ok) { td.classList.add('saved'); setTimeout(() => td.classList.remove('saved'), 1500); }
-    else { td.classList.add('save-error'); setTimeout(() => td.classList.remove('save-error'), 2000); }
+    if (ok) {
+      td.classList.add('saved');
+      setTimeout(() => td.classList.remove('saved'), 1500);
+    } else {
+      td.classList.add('save-error');
+      setTimeout(() => td.classList.remove('save-error'), 2000);
+    }
   };
-  input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { td.classList.remove('editing'); td.textContent = currentVal || '-'; } };
+  
+  input.onkeydown = (e) => { if (e.key === 'Enter') { input.blur(); } if (e.key === 'Escape') { td.classList.remove('editing'); td.textContent = currentVal || '-'; } };
   input.onblur = finish;
 }
 
@@ -673,23 +543,26 @@ const tbody=document.getElementById('nonOrgTable').querySelector('tbody');
 const years=['2018','2019','2020','2021','2022','2023','2024','2025'];
 tbody.innerHTML=mergedNonOrganico.map(a=>{
 const yCells=years.map(y=>`<td>${(a._years&&a._years[y])||0}</td>`).join('');
-return`<tr data-nome="${a._nome}"><td>${arbLink(a._nome)}</td><td>${a._eta||'-'}</td><td>${a._comitato||'-'}</td>${yCells}<td style="font-weight:700;color:var(--gold)">${a._totale||0}</td></tr>`;
+return`<tr data-nome="${a._nome}"><td>${a._nome}</td><td>${a._eta||'-'}</td><td>${a._comitato||'-'}</td>${yCells}<td style="font-weight:700;color:var(--gold)">${a._totale||0}</td></tr>`;
 }).join('');
 if(!mergedNonOrganico.length)tbody.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--muted)">Nessun arbitro non in organico</td></tr>';
+tbody.querySelectorAll('tr[data-nome]').forEach(tr=>{tr.onclick=()=>showProfile(tr.dataset.nome)});
 }
 
 function renderSupTable(){
 const tbody=document.getElementById('supTable').querySelector('tbody');
-tbody.innerHTML=supervisori.map(s=>`<tr><td>${arbLink(s._nome)}</td><td>${s._eta}</td><td>${s._qualifica||'-'}</td><td>${s._comitato||'-'}</td><td>${s._stato||'-'}</td><td>${s._anz||0} anni</td></tr>`).join('');
+tbody.innerHTML=supervisori.map(s=>`<tr><td>${s._nome}</td><td>${s._eta}</td><td>${s._qualifica||'-'}</td><td>${s._comitato||'-'}</td><td>${s._stato||'-'}</td><td>${s._anz||0} anni</td></tr>`).join('');
 }
 
 function setupFilters(){
 const sel=document.getElementById('filterComitato');
 const coms=[...new Set(arbitri.map(a=>a._comitato).filter(Boolean))].sort();
 sel.innerHTML='<option value="">Tutti i comitati</option>'+coms.map(c=>`<option>${c}</option>`).join('');
+
 const selS=document.getElementById('filterStato');
 const stats=[...new Set(arbitri.map(a=>a._stato).filter(Boolean))].sort();
 selS.innerHTML='<option value="">Tutti gli stati</option>'+stats.map(c=>`<option>${c}</option>`).join('');
+
 ['searchName','filterComitato','filterStato','filterEta'].forEach(id=>{
 document.getElementById(id).addEventListener('input',()=>renderArbitriTable(applyFilters()));
 document.getElementById(id).addEventListener('change',()=>renderArbitriTable(applyFilters()));
@@ -705,66 +578,20 @@ const eta=document.getElementById('filterEta').value;
 if(q)d=d.filter(a=>a._nome.toLowerCase().includes(q));
 if(com)d=d.filter(a=>a._comitato===com);
 if(stato)d=d.filter(a=>a._stato===stato);
-if(eta){const ranges={'<20':[0,19],'20-30':[20,30],'30-40':[31,40],'40-50':[41,50],'>50':[51,200]};const[mn,mx]=ranges[eta]||[0,200];d=d.filter(a=>a._eta>=mn&&a._eta<=mx);}
-return d;
+if(eta){
+const ranges={'<20':[0,19],'20-30':[20,30],'30-40':[31,40],'40-50':[41,50],'>50':[51,200]};
+const[mn,mx]=ranges[eta]||[0,200];
+d=d.filter(a=>a._eta>=mn&&a._eta<=mx);
 }
-
-function getCatBadgeClass(tipo) {
-  const t = tipo.toLowerCase();
-  if (t.startsWith('b1')) return 'badge-b1';
-  if (t.startsWith('b2')) return 'badge-b2';
-  if (t.includes('u1') || t.includes('u2')) return 'badge-u1';
-  if (t.includes('tdt')) return 'badge-td';
-  if (t.includes('student')) return 'badge-st';
-  if (t.includes('fin') || t.includes('cips')) return 'badge-fi';
-  return 'badge-re';
+return d;
 }
 
 function showProfile(nome){
 const a=merged.find(x=>x._nome===nome);if(!a)return;
 const years=['2018','2019','2020','2021','2022','2023','2024','2025'];
 const vals=years.map(y=>(a._years&&a._years[y])||0);
-
-const desList = getDesignazioniForArbitro(nome);
-const seg25 = getSegnapuntiCount(nome);
-
-// Season summary inline
-const seasonSummary = years.map(y => `<span class="yr">${y}:</span> <span class="cnt">${(a._years&&a._years[y])||0}</span>`).join(' | ');
-
-// Candidato promozione badge (V9: only if active in 2024 or 2025)
-const isCandidate = isCandidatoPromozione(a);
-const promoBadge = isCandidate ? ' <span class="badge badge-promo">🌟 Candidato promozione</span>' : '';
-
-// Category breakdown
-const catCount = {};
-desList.forEach(t => {
-  const tipo = (t.tipo || 'N/D').trim();
-  catCount[tipo] = (catCount[tipo] || 0) + 1;
-});
-
-let catBadgesHtml = '';
-if (Object.keys(catCount).length) {
-  catBadgesHtml = '<div class="profile-section"><h4>📋 Breakdown per Categoria</h4><div class="cat-badges">' +
-    Object.entries(catCount).sort((a,b)=>b[1]-a[1]).map(([tipo, count]) =>
-      `<span class="cat-badge ${getCatBadgeClass(tipo)}" style="background:${getCatBgColor(tipo)}">${tipo}: ${count}</span>`
-    ).join('') + '</div></div>';
-}
-
-// Tornei table
-let torneiHtml = '';
-if (desList.length) {
-  const sorted = [...desList].sort((a,b) => {
-    const da = extractYear(a.data), db = extractYear(b.data);
-    return db - da;
-  });
-  torneiHtml = `<div class="profile-section"><h4>🏐 Tornei Arbitrati (${desList.length} designazioni)</h4>
-    <div style="max-height:250px;overflow-y:auto"><table class="tornei-table"><thead><tr><th>Tipo</th><th>Data</th><th>Luogo</th></tr></thead><tbody>` +
-    sorted.map(t => `<tr><td><span class="badge ${getCatBadgeClass(t.tipo)}">${t.tipo||'-'}</span></td><td>${t.data||'-'}</td><td>${t.luogo||'-'}</td></tr>`).join('') +
-    '</tbody></table></div></div>';
-}
-
 const info=`
-<div class="profile-grid">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
 <div><strong>Età:</strong> ${a._eta}</div>
 <div><strong>Qualifica:</strong> ${a._qualifica||'-'}</div>
 <div><strong>Comitato:</strong> ${a._comitato||'-'}</div>
@@ -773,15 +600,8 @@ const info=`
 <div><strong>Totale tornei:</strong> <span style="color:var(--gold);font-weight:700">${a._totale||0}</span></div>
 ${a._dtPrimo?`<div><strong>Primo tess.:</strong> ${fmtDate(a._dtPrimo)}</div>`:''}
 ${!a._inOrganico?'<div style="color:var(--red)">⚠️ Non in organico</div>':''}
-<div><strong>Designazioni:</strong> ${desList.length}</div>
-<div><strong>Segnapunti 2025:</strong> ${seg25}</div>
 </div>
-${promoBadge ? '<div style="margin-bottom:12px">' + promoBadge + '</div>' : ''}
-<div class="profile-section"><h4>📅 Riepilogo Stagioni</h4><div class="season-summary">${seasonSummary}</div></div>
-${catBadgesHtml}
-${torneiHtml}
-<div class="profile-section"><h4>📈 Attività per Anno</h4><canvas id="profileChart"></canvas></div>`;
-
+<canvas id="profileChart"></canvas>`;
 openModal(`👤 ${nome}`,info);
 setTimeout(()=>{
 const c=document.getElementById('profileChart');if(!c)return;
@@ -789,24 +609,8 @@ new Chart(c,{type:'bar',data:{labels:years,datasets:[{data:vals,backgroundColor:
 },100);
 }
 
-function extractYear(dateStr) {
-  if (!dateStr) return 0;
-  const m = dateStr.match(/(\d{4})/);
-  return m ? parseInt(m[1]) : 0;
-}
-
-function getCatBgColor(tipo) {
-  const t = (tipo||'').toLowerCase();
-  if (t.startsWith('b1')) return 'rgba(239,68,68,0.2)';
-  if (t.startsWith('b2')) return 'rgba(59,130,246,0.2)';
-  if (t.includes('u1') || t.includes('u2')) return 'rgba(168,85,247,0.2)';
-  if (t.includes('tdt')) return 'rgba(20,184,166,0.2)';
-  if (t.includes('student')) return 'rgba(245,158,11,0.2)';
-  return 'rgba(100,116,139,0.2)';
-}
-
 function openModal(title,html){
-document.getElementById('modalTitle').innerHTML=title;
+document.getElementById('modalTitle').textContent=title;
 document.getElementById('modalBody').innerHTML=html;
 document.getElementById('modalOverlay').classList.add('active');
 }
