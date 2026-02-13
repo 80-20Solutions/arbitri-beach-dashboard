@@ -993,7 +993,10 @@ function closeModal(){document.getElementById('modalOverlay').classList.remove('
 document.getElementById('modalClose').onclick=closeModal;
 document.getElementById('modalOverlay').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeFilterModal()}});
-document.getElementById('filterOverlay').onclick=e=>{if(e.target===e.currentTarget)closeFilterModal()};
+window.addEventListener('DOMContentLoaded', () => {
+  const fo = document.getElementById('filterOverlay');
+  if (fo) fo.onclick = e => { if (e.target === e.currentTarget) closeFilterModal(); };
+});
 
 loadData().catch(err=>{
 document.getElementById('spinner').innerHTML=`<div style="color:var(--red);text-align:center"><h2>Errore caricamento</h2><p>${err.message}</p><button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;cursor:pointer">Riprova</button></div>`;
