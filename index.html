@@ -544,9 +544,14 @@ const veterani=arbitri.filter(a=>a._anz>20);
 const qualMap={};arbitri.forEach(a=>{const q=a._qualifica||'N/D';qualMap[q]=(qualMap[q]||0)+1});
 
 const cards=[
-{icon:'🔴',label:'Arbitri inattivi',val:inattivi.length,cls:'red',custom:()=>openModal('🔴 Arbitri Inattivi ('+inattivi.length+')',
-  `<p style="color:var(--muted);margin-bottom:12px">Arbitri in organico che non hanno arbitrato alcun torneo nel 2024 né nel 2025. Potrebbero aver smesso l'attività o essere in pausa.</p>
-  <ul class="modal-list">${inattivi.map(a=>`<li>${arbLink(a._nome)} — ultimo torneo: ${['2023','2022','2021','2020','2019','2018'].find(y=>(a._years&&a._years[y])>0)||'mai'}</li>`).join('')}</ul>`)},
+{icon:'🔴',label:'Arbitri inattivi',val:inattivi.length,cls:'red',custom:()=>{
+  const now=2025;
+  const inSort=[...inattivi].map(a=>{const lastYr=['2025','2024','2023','2022','2021','2020','2019','2018'].find(y=>(a._years&&a._years[y])>0);return{...a,_lastYear:lastYr?parseInt(lastYr):0,_inactYears:lastYr?(now-parseInt(lastYr)):99}});
+  inSort.sort((a,b)=>b._inactYears-a._inactYears);
+  openModal('🔴 Arbitri Inattivi ('+inattivi.length+')',
+  `<p style="color:var(--muted);margin-bottom:12px">Arbitri in organico che non hanno arbitrato alcun torneo nel 2024 né nel 2025. Ordinati per anni di inattività (dal più inattivo).</p>
+  <table style="width:100%;font-size:.85rem"><thead><tr><th style="text-align:left;padding:6px;color:var(--gold)">Arbitro</th><th style="padding:6px;color:var(--gold)">Ultimo torneo</th><th style="padding:6px;color:var(--gold)">Anni inattivo</th></tr></thead>
+  <tbody>${inSort.map(a=>`<tr><td style="padding:6px">${arbLink(a._nome)}</td><td style="padding:6px;text-align:center">${a._lastYear||'Mai'}</td><td style="padding:6px;text-align:center;color:var(--red);font-weight:700">${a._lastYear?a._inactYears:'∞'}</td></tr>`).join('')}</tbody></table>`)}},
 {icon:'🟡',label:'Arbitri in calo',val:inCalo.length,cls:'yellow',custom:()=>openModal('🟡 Arbitri in Calo ('+inCalo.length+')',
   `<p style="color:var(--muted);margin-bottom:12px">Arbitri la cui attività nel 2024 è inferiore alla loro media storica (2018-2023). Segnale di possibile disimpegno progressivo.</p>
   <ul class="modal-list">${inCalo.map(a=>{const prev=['2018','2019','2020','2021','2022','2023'].map(y=>(a._years&&a._years[y])||0).filter(v=>v>0);const avg=prev.length?(prev.reduce((s,v)=>s+v,0)/prev.length).toFixed(1):0;return`<li>${arbLink(a._nome)} — 2024: <strong>${(a._years&&a._years['2024'])||0}</strong> (media storica: ${avg})</li>`}).join('')}</ul>`)},
