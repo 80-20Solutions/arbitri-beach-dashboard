@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Arbitri Beach Volley V12</title>
+<title>Dashboard Arbitri Beach Volley V14</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -407,8 +407,10 @@ function processOrgObj(obj) {
   obj._qualifica=(obj['Qualifica']||'').trim();
   obj._comitato=(obj['Comitato Territoriale']||'').trim();
   obj._stato=(obj['Stato tesseramento']||'').trim();
-  if(obj._tipo.toLowerCase().includes('arbitro')&&!obj._tipo.toLowerCase().includes('supervis'))arbitri.push(obj);
-  else if(obj._tipo.toLowerCase().includes('supervis'))supervisori.push(obj);
+  obj._ritirato=(obj['Ritirato']||'').trim();
+  const isRitirato=obj._ritirato&&obj._ritirato.toLowerCase()!=='';
+  if(obj._tipo.toLowerCase().includes('arbitro')&&!obj._tipo.toLowerCase().includes('supervis')&&!isRitirato)arbitri.push(obj);
+  else if(obj._tipo.toLowerCase().includes('supervis')&&!isRitirato)supervisori.push(obj);
 }
 
 function processAnalisiRows(rows) {
